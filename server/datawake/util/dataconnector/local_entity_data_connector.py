@@ -322,3 +322,69 @@ class MySqlEntityDataConnector(DataConnector):
             self.close()
             return False
 
+
+
+
+    def insert_entities(self, url, entity_type, entity_values):
+        self._check_conn()
+        cursor = self.cnx.cursor()
+        try:
+            for entity_value in entity_values:
+                sql = "select count(1) from general_extractor_web_index where url = %s and entity_type = %s and entity_value = %s"
+                params = [url,entity_type,entity_value]
+                cursor.execute(sql,params)
+                count = cursor.fetchall()[0][0]
+                if count == 0:
+                    sql = "INSERT INTO general_extractor_web_index (url,entity_type,entity_value) VALUES (%s,%s,%s)"
+                    cursor.execute(sql,params)
+            self.cnx.commit()
+            cursor.close()
+        except:
+            self.close()
+            raise
+
+
+
+    def insert_domain_entities(self, domain,url, entity_type, entity_values):
+        self._check_conn()
+        cursor = self.cnx.cursor()
+        try:
+            for entity_value in entity_values:
+                sql = "select count(1) from domain_extractor_web_index where domain = %s and url = %s and entity_type = %s and entity_value = %s"
+                params = [domain,url,entity_type,entity_value]
+                cursor.execute(sql,params)
+                count = cursor.fetchall()[0][0]
+                if count == 0:
+                    sql = "INSERT INTO domain_extractor_web_index (domain,url,entity_type,entity_value) VALUES (%s,%s,%s,%s)"
+                    cursor.execute(sql,params)
+            self.cnx.commit()
+            cursor.close()
+        except:
+            self.close()
+            raise
+
+
+
+
+    # # DOMAINS  ####
+
+
+    def get_domain_entity_matches(self, domain, type, values):
+        self._check_conn()
+        cursor = self.cnx.cursor()
+        sql = ""
+        params = []
+        max = len(values) - 1
+        for i in range(len(values)):
+            params.append(domain + '\0' + type + '\0' + values[i])
+            sql = sql + "select rowkey from datawake_domain_entities where rowkey = %s"
+            if i < max:
+                sql = sql + " union all "
+        try:
+            cursor.execute(sql, params)
+            rows = cursor.fetchall()
+            cursor.close()
+            return map(lambda x: x[0].split('\0')[2], rows)
+        except:
+            self.close()
+            raise

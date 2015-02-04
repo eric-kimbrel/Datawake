@@ -552,6 +552,17 @@ def getUserUrlRanks(org, userId, trail, domain='default'):
     return ranks
 
 
+
+#
+# return a dict of url->rank for a single user within a trail and org
+#
+def getRankedUrls(org, trail, domain='default'):
+    sql = "SELECT url,rank from datawake_url_rank where org = %s AND domain =%s AND trailname= %s AND rank > 0"
+    params = [org.upper(), domain, trail]
+    rows = dbGetRows(sql, params)
+    return rows
+
+
 ####  URL Counts ####
 
 
@@ -635,6 +646,12 @@ def get_marked_entities(org, domain, user_name):
     params = [org, domain, user_name]
     rows = dbGetRows(sql, params)
     return map(lambda x: dict(value=x[0]), rows)
+
+def get_marked_entities_for_domain(org, domain):
+    sql = "select entity_type,entity_value from invalid_extracted_entity where org=%s and domain=%s"
+    params = [org, domain]
+    rows = dbGetRows(sql, params)
+    return rows
 
 
 #### OLD STUFF, needs cleaned and updated ####

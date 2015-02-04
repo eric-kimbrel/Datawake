@@ -82,6 +82,7 @@ class ExtractPhoneNumber(extractor.Extractor):
 
         phone_list = []
         for i in range(len(pn)):
-            phone_list.append(self.create_attribute(pn[i]))
+            if len(pn[i]) == 10:
+                phone_list.append(self.create_attribute(pn[i]))
         return phone_list
 

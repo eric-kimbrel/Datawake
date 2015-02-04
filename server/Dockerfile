@@ -8,7 +8,10 @@ RUN apt-get install -y python-software-properties \
     && apt-get -y install python-pip \
     && apt-get -y install python-dev
 
-RUN apt-get -y install git
+RUN apt-get -y install git \
+    && apt-get -y install make \
+    && apt-get -y install cmake
+
 RUN apt-get install -y wget
 
 # install tangelo
@@ -78,7 +81,25 @@ COPY forensic /usr/local/share/tangelo/web/forensic
 COPY forensic_v2 /usr/local/share/tangelo/web/forensic_v2
 ENV PYTHONPATH /usr/local/share/tangelo/web:$PYTHONPATH
 
+# install the MITIE library
+RUN apt-get install -y libjpeg-dev
+RUN sudo apt-get install -y libopenblas-dev liblapack-dev
+RUN mkdir /usr/lib/mitie \
+    && cd /usr/lib/mitie \
+    && git clone https://github.com/mitll/MITIE.git \
+    && cd MITIE \
+    && make MITIE-models \
+    && cd tools/ner_stream \
+    && mkdir build \
+    && cd build \
+    && cmake .. \
+    && cmake --build . --config Release \
+    && cd ../../../mitielib \
+    && make
+ENV MITIE_HOME /usr/lib/mitie/MITIE
 
+# install beatiful soup
+RUN apt-get install -y python-bs4
 
 # set the default container command to run tangelo
 

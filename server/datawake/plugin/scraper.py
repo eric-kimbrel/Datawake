@@ -15,16 +15,15 @@ Copyright 2014 Sotera Defense Solutions, Inc.
 """
 
 import json
-
 import tangelo
-
+import urllib
 import datawake.util.db.datawake_mysql as db
-from datawake.util.kafka import kafka_producer
+from datawake.util.dataconnector import factory
 from datawake.util.session.helper import is_in_session
 from datawake.util.session import helper
 from datawake.util.validate.parameters import required_parameters
-import urllib
-
+from datawake.extractor import master_extractor as extractors
+from bs4 import BeautifulSoup
 
 """
 
@@ -61,15 +60,32 @@ def scrape_page(html, url, userId, userName, trail, domain, org):
     org = org.encode('utf-8')
     html = urllib.unquote(html).encode('utf-8')
     url = url.encode('utf-8')
-    #tangelo.log('posting url contents to kafka: ' + url)
-    kafka_producer.sendVisitingMessage(org, domain, str(userId), url, html)
-    # add the row to the database
+
+    connector = factory.get_entity_data_connector()
+    (features,errors) = extractors.extractAll(html)
+    tangelo.log(features)
+    for type,values in features.iteritems():
+        connector.insert_entities(url,type,values)
+        #for value in values:
+        #    tangelo.log("EXTRACTED: "+type+"\t"+value)
+        if len(values) > 0:
+            features_in_domain = connector.get_domain_entity_matches(domain,type,values)
+            if len(features_in_domain) > 0:
+                connector.insert_domain_entities(domain,url, type, features_in_domain)
+                #tangelo.log("EXTRACTED "+str(len(features_in_domain))+" DOMAIN FEATURES")
+
+
+    for error in errors:
+        tangelo.log("FEATURE EXTRACTION ERROR: "+error)
+
 
     id = db.addBrowsePathData(org, url, userId, userName, trail, domain=domain)
-
     # get number of times this url appears in the database
     count = db.getUrlCount(org, url, domain=domain)
     result = dict(id=id, count=count)
+
+
+
     #tangelo.log("POSTED url:" + url + "  return: " + str(result))
     return json.dumps(result)
 

@@ -6,39 +6,10 @@ mysql:
     - "3336:3306"
 
 
-zookeeper:
-  image: jplock/zookeeper:3.4.6
-  ports:
-    - "2181"
-
-kafka:
-  image: wurstmeister/kafka:0.8.1.1-1
-  ports:
-    - "9092:9092"
-  links:
-    - zookeeper:zk
-  environment:
-    KAFKA_ADVERTISED_HOST_NAME: 192.168.59.103
-  volumes:
-    - /var/run/docker.sock:/var/run/docker.sock
-
-
-dwstream:
-  build: ../memex-datawake-stream
-  links:
-    - mysql:mysql
-    - kafka:kafka
-    - zookeeper:zk
-  volumes:
-    - /Users/.../code/sotera/Datawake/memex-datawake-stream:/memex-datawake-stream
-
-
-
 datawake:
   build: ../server
   links:
     - mysql:mysql
-    - kafka:kafka
   ports:
     - "80:80"
   environment:
@@ -61,7 +32,6 @@ datawake:
     - /Users/.../code/sotera/Datawake/server/datawake:/usr/local/share/tangelo/web/datawake
     - /Users/.../code/sotera/Datawake/server/domain:/usr/local/share/tangelo/web/domain
     - /Users/.../code/sotera/Datawake/server/forensic:/usr/local/share/tangelo/web/forensic
-    - /Users/.../code/sotera/Datawake/memex-datawake-stream:/memex-datawake-stream
 
 
 
