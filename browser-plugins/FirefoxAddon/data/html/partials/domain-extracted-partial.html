@@ -15,7 +15,7 @@
         </tr>
         </thead>
         <tbody>
-        <tr ng-repeat="entity in entities">
+        <tr ng-repeat="entity in entities"  ng-hide="invalid[entity]">
             <td>
                 <span>
                     {{entity}}
@@ -27,8 +27,8 @@
             <td ng-show="extracted_tools.length == 0">
                 <span>No External Tools Available</span>
             </td>
-            <td>
-                <button ng-hide="invalid[entity]" class="btn btn-danger" ng-click="markInvalid(type, entity);">Invalid Extraction?</button>
+            <td ng-hide="invalid[entity]">
+                <button ng-hide="invalid[entity]" class="btn btn-danger" ng-click="markInvalid(type, entity);">-</button>
                 <span ng-hide="!invalid[entity]">Marked</span>
             </td>
         </tr>

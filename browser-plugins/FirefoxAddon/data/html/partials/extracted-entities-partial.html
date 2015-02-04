@@ -4,12 +4,16 @@
     <div ng-repeat="(entityType, entities) in extracted_entities_dict">
         <h3>{{entityType}}</h3>
         <table class="table table-bordered">
-            <tr ng-repeat="name in entities track by $index">
+            <tr ng-repeat="name in entities track by $index" ng-hide="invalid[name]">
                 <td>
                     <span ng-switch on="isExtracted(entityType, name)">
                         <span ng-switch-when="true" style="font-weight: bold">{{name}}</span>
                         <span ng-switch-default style="font-weight: normal">{{name}}</span>
                     </span>
+                </td>
+                <td >
+                    <button ng-hide="invalid[name]" class="btn btn-danger" ng-click="markInvalid(entityType, name);">-</button>
+                    <span ng-hide="!invalid[name]">Marked</span>
                 </td>
             </tr>
         </table>

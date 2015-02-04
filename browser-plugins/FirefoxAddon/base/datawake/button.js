@@ -137,7 +137,7 @@ function getEntities(domain, callback) {
 function markInvalid(entity) {
     var post_url = addOnPrefs.datawakeDeploymentUrl + "/feedback/bad";
     requestHelper.post(post_url, JSON.stringify(entity), function (response) {
-        mainPanel.port.emit("marked", entity.value);
+        mainPanel.port.emit("marked", entity.entity_value);
     });
 }
 
