@@ -3,7 +3,6 @@ var data = self.data;
 var addOnPrefs = require("sdk/simple-prefs").prefs;
 var ui = require('sdk/ui');
 var tabs = require("sdk/tabs");
-var timer = require("sdk/timers");
 
 var storage = require("./storage");
 var constants = require("./constants");
@@ -20,7 +19,6 @@ exports.activeIcon = activeIcon;
 
 var datawakeButton;
 var mainPanel;
-var lookaheadTimerId;
 var badgeForTab = {};
 
 
@@ -52,16 +50,10 @@ function overrideActiveTab() {
 }
 
 /**
- * Sets up the timer for the lookahead.
+ * Sets up listeners to update page data
  */
 function setupListeners() {
     try {
-
-        mainPanel.port.on("startLookaheadTimer", function (lookaheadTimerObject) {
-            var datawakeInfo = storage.getDatawakeInfo(tabs.activeTab.id);
-            startLookaheadTimer(datawakeInfo, lookaheadTimerObject.links, 0, 1000);
-        });
-
         mainPanel.port.on("setUrlRank", setUrlRank);
         mainPanel.port.on("openExternalLink", openExternalTool);
         mainPanel.port.on("markInvalid", markInvalid);
@@ -79,7 +71,6 @@ function onToggle(state) {
     if (datawakeInfo != null && datawakeInfo.isDatawakeOn && constants.isValidUrl(tabs.activeTab.url)) {
         if (mainPanel != null || mainPanel != undefined)
             mainPanel.destroy();
-        clearTimers();
         mainPanel = panel.Panel({
             width: 800,
             height: 1000,
@@ -89,7 +80,6 @@ function onToggle(state) {
                 starUrl: data.url("css/icons/"),
                 datawakeInfo: datawakeInfo,
                 useDomainFeatures: addOnPrefs.useDomainFeatures,
-                useLookahead: addOnPrefs.useLookahead,
                 useRanking: addOnPrefs.useRanking,
                 versionNumber: self.version,
                 current_url: tabs.activeTab.url,
@@ -206,57 +196,8 @@ function setUrlRank(rank_data) {
     });
 }
 
-/**
- * Starts the lookahead timer.
- * @param datawakeInfo The datawake information associated with the search.
- * @param links The lookahead links to check.
- * @param index The current index of the link.
- * @param delay The delay between requests.
- */
-function startLookaheadTimer(datawakeInfo, links, index, delay) {
-    console.debug("Starting lookahead timer...");
-    var post_data = {
-        url: links[index],
-        srcurl: tabs.activeTab.url,
-        domain: datawakeInfo.domain.name
-    };
-    var url = addOnPrefs.datawakeDeploymentUrl + "/lookahead/matches";
-    requestHelper.post(url, JSON.stringify(post_data), function (response) {
-        var entities = response.json;
-        var objectReturned;
-        if (objectReturned = entities.matches.length > 0 || entities.domain_search_matches.length > 0) {
-            mainPanel.port.emit("lookaheadTimerResults", entities);
-            links.splice(index, 1);
-            if (index >= links.length) {
-                index = 0;
-            }
-        } else {
-            index = (index + 1) % links.length;
-        }
-        if (links.length > 0) {
-            if (objectReturned) {
-                startLookaheadTimer(datawakeInfo, links, index, delay);
-            } else if (index == 0) {
-                lookaheadTimerId = timer.setTimeout(function (delayTimesTwo) {
-                    startLookaheadTimer(datawakeInfo, links, index, delayTimesTwo);
-                }, 2 * delay);
-            } else {
-                lookaheadTimerId = timer.setTimeout(function (delayTimesTwo) {
-                    startLookaheadTimer(datawakeInfo, links, index, delayTimesTwo);
-                }, 1);
-            }
-        }
-    }, function (err) {
-        console.info("lookahead error");
-    });
-}
 
-/**
- * Clears the timers.
- */
-function clearTimers() {
-    timer.clearInterval(lookaheadTimerId);
-}
+
 
 /**
  * Switches the widget and datawake to a new tab.
@@ -266,7 +207,6 @@ function clearTimers() {
 function switchToTab(tabId, badgeCount) {
     // Checks to see if they switched tabs really fast.
     if (tabId === tabs.activeTab.id) {
-        clearTimers();
         if (badgeCount != undefined) {
             deleteBadgeForTab(tabId);
             badgeForTab[tabId] = badgeCount;

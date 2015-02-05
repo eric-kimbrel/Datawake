@@ -8,16 +8,13 @@ var panelApp = angular.module('panelApp', ["ngRoute"]).config(['$provide', funct
 
 panelApp.controller("PanelCtrl", function ($scope, $document) {
 
-    $scope.lookaheadLinks = [];
     $scope.extracted_tools = [];
     $scope.datawake = addon.options.datawakeInfo;
     $scope.current_url = addon.options.current_url;
-    $scope.lookaheadEnabled = addon.options.useLookahead;
     $scope.domainFeaturesEnabled = addon.options.useDomainFeatures;
     $scope.rankingEnabled = addon.options.useRanking;
     $scope.versionNumber = addon.options.versionNumber;
     $scope.invalid = {};
-    $scope.lookaheadTimerStarted = false;
     $scope.pageVisits = addon.options.pageVisits;
     $scope.headerPartial = "partials/header-partial.html";
 
@@ -45,22 +42,12 @@ panelApp.controller("PanelCtrl", function ($scope, $document) {
 
     addon.port.on("entities", function (extractedEntities) {
         $scope.$apply(function () {
-            if (extractedEntities.allEntities.hasOwnProperty("website")) {
-                var lookaheadTimerObject = {};
-                lookaheadTimerObject.links = extractedEntities.allEntities["website"];
-                addon.port.emit("startLookaheadTimer", lookaheadTimerObject);
-            }
             console.debug("Parsing Extracted Entities...");
             $scope.extracted_entities_dict = extractedEntities.allEntities;
             $scope.entities_in_domain = extractedEntities.domainExtracted;
         });
     });
 
-    addon.port.on("lookaheadTimerResults", function (lookahead) {
-        $scope.$apply(function () {
-            $scope.lookaheadLinks.push(lookahead);
-        });
-    });
 
     addon.port.on("externalLinks", function (links) {
         console.debug("Loading External Entities..");
@@ -69,14 +56,6 @@ panelApp.controller("PanelCtrl", function ($scope, $document) {
         });
     });
 
-
-    $scope.searchHitsToggle = function (lookaheadObj) {
-        lookaheadObj.searchHitsShow = !lookaheadObj.searchHitsShow;
-    };
-
-    $scope.matchesToggle = function (lookaheadObj) {
-        lookaheadObj.matchesShow = !lookaheadObj.matchesShow;
-    };
 
     $scope.openExternalLink = function (externalUrl) {
         addon.port.emit("openExternalLink", {externalUrl: externalUrl});
@@ -144,9 +123,6 @@ panelApp.config(['$routeProvider',
             }).
             when('/features/domain', {
                 templateUrl: 'partials/domain-extracted-partial.html'
-            }).
-            when('/lookahead', {
-                templateUrl: 'partials/lookahead-partial.html'
             }).
             when('/feedback', {
                 templateUrl: 'partials/feedback-partial.html'

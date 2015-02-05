@@ -63,12 +63,6 @@
             "value": true
         },
         {
-            "name":"useLookahead",
-            "title":"Enable/Disable Lookahead",
-            "type": "bool",
-            "value": true
-        },
-        {
             "name":"useScraper",
             "title":"Enable/Disable Scraper",
             "type": "bool",
