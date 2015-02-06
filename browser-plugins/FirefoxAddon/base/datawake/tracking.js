@@ -55,7 +55,7 @@ function promptForExtractedFeedback(highlightedText, callback) {
     var obj = {};
     obj.raw_text = highlightedText;
     currentTrackingTabWorker.port.emit("promptForFeedback", obj);
-    currentTrackingTabWorker.port.on("feedback", function (response) {
+    currentTrackingTabWorker.port.once("feedback", function (response) {
         callback(response.type, response.value);
     });
 }
