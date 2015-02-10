@@ -32,118 +32,6 @@ Interface to datawake relational database tables (mysql)
 """
 
 
-#
-# Define each datawake_table
-#
-TABLES = {}
-
-TABLES['datawake_org'] = """
-    CREATE TABLE datawake_org (
-      email VARCHAR(300),
-      org VARCHAR(300)
-    )
-"""
-
-TABLES['datawake_domains'] = """
-    CREATE TABLE datawake_domains (
-      name VARCHAR(300),
-      description TEXT,
-      PRIMARY KEY(name)
-    )
-"""
-
-TABLES['datawake_selections'] = """
-  CREATE TABLE datawake_selections (
-  id INT NOT NULL AUTO_INCREMENT,
-  postId INT NOT NULL,
-  selection TEXT,
-  PRIMARY KEY(id),
-  FOREIGN KEY(postId) REFERENCES datawake_data(id) ON DELETE CASCADE
-  )
-
-"""
-
-TABLES['datawake_data'] = """
-    CREATE TABLE datawake_data (
-      id INT NOT NULL AUTO_INCREMENT,
-      ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      url TEXT,
-      userId TEXT,
-      userName TEXT,
-      trail VARCHAR(100),
-      org VARCHAR(300),
-      domain VARCHAR(300),
-      PRIMARY KEY(id),
-      INDEX(url(30))
-    )
-
-"""
-TABLES['datawake_trails'] = """
-    CREATE TABLE datawake_trails (
-      name VARCHAR(100) NOT NULL,
-      created TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      created_by TEXT,
-      description TEXT,
-      org VARCHAR(300),
-      domain VARCHAR(300),
-      PRIMARY KEY(name,org,domain)
-    )
-
-"""
-
-TABLES['starred_features'] = """
-    CREATE TABLE starred_features (
-      org VARCHAR(300),
-      trail VARCHAR(100) NOT NULL,
-      type VARCHAR(100),
-      value VARCHAR(1024),
-      INDEX(org,trail)
-    )
-"""
-
-TABLES['datawake_url_rank'] = """
-   CREATE TABLE datawake_url_rank (
-    id INT NOT NULL AUTO_INCREMENT,
-    url TEXT,
-    userId TEXT,
-    trailname VARCHAR(100),
-    rank INT,
-    org VARCHAR(300),
-    domain VARCHAR(300),
-    PRIMARY KEY(id),
-	INDEX(url(30),userId(20),trailname)
-)
-"""
-
-TABLES['datawake_domain_entities'] = """
-    CREATE TABLE datawake_domain_entities (
-      rowkey varchar(1024),
-      INDEX(rowkey(300))
-    )
-
-"""
-
-TABLES['general_extractor_web_index'] = """
-    CREATE TABLE general_extractor_web_index (
-      url varchar(1024),
-      entity_type varchar(100),
-      entity_value varchar(1024),
-      ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      index(url(300))
-    )
-"""
-
-TABLES['domain_extractor_web_index'] = """
-  CREATE TABLE domain_extractor_web_index (
-      domain VARCHAR(300),
-      url varchar(1024),
-      entity_type varchar(100),
-      entity_value varchar(1024),
-      ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      index(domain(300),url(300))
-    )
-"""
-
 
 
 #
@@ -446,36 +334,6 @@ def getTrailsWithUserCounts(org):
     return map(lambda x: {'domain': x[0], 'trail': x[1], 'userCount': x[2], 'records': x[3]}, rows)
 
 
-#
-# Star a feature for a given trail
-#
-def starFeatureForTrail(org, trail, type, value):
-    sql = "INSERT INTO starred_features (org,trail,type,value) VALUES(%s,%s,%s,%s)"
-    params = [org, trail, type, value]
-    dbCommitSQL(sql, params)
-
-
-#
-# un star a feature for a given trail
-#
-def unStarFeatureForTrail(org, trail, type, value):
-    sql = "DELETE FROM starred_features WHERE org = %s and trail = %s and type = %s and value = %s"
-    params = [org, trail, type, value]
-    dbCommitSQL(sql, params)
-
-
-#
-# Return list of starred features for a trail
-#
-def getStarredFeaturesForTrail(org, trail):
-    sql = "SELECT type,value FROM starred_features WHERE trail = %s and org = %s"
-    params = [trail, org]
-    rows = dbGetRows(sql, params)
-    if len(rows) == 0:
-        return []
-    else:
-        return map(lambda x: {'type': x[0], 'value': x[1]}, rows)
-
 
 ####   URL RANKS   ####
 
@@ -639,62 +497,10 @@ def get_marked_entities(org, domain, user_name):
     rows = dbGetRows(sql, params)
     return map(lambda x: dict(value=x[0]), rows)
 
+
+
 def get_marked_entities_for_domain(org, domain):
     sql = "select entity_type,entity_value from invalid_extracted_entity where org=%s and domain=%s"
     params = [org, domain]
     rows = dbGetRows(sql, params)
     return rows
-
-
-#### OLD STUFF, needs cleaned and updated ####
-
-
-
-#
-# Drop and re-create all tables
-#
-def drop_and_create_tables():
-    cnx = get_cnx()
-    cursor = cnx.cursor()
-    try:
-        for name in [
-            'datawake_domain_entities',
-            'datawake_domains',
-            'datawake_org',
-            'datawake_url_rank',
-            'datawake_trails',
-            'datawake_selections',
-            'datawake_data',
-            'starred_features',
-            'general_extractor_web_index',
-            'domain_extractor_web_index'
-        ]:
-            print 'DROP TABLE ', name
-            cursor.execute('DROP TABLE IF EXISTS `' + name + '`')
-        for name in [
-            'datawake_domain_entities',
-            'datawake_domains',
-            'datawake_org', 'datawake_data',
-            'datawake_url_rank',
-            'datawake_trails',
-            'datawake_selections',
-            'starred_features',
-            'general_extractor_web_index',
-            'domain_extractor_web_index'
-        ]:
-            ddl = TABLES[name]
-            print("Creating table {}: ".format(name))
-            cursor.execute(ddl)
-    finally:
-        cursor.close()
-        cnx.close()
-
-
-#
-#  Main function allows to run as a script to drop and create tables.
-#
-if __name__ == '__main__':
-    if sys.argv[1] == 'create-db':
-        drop_and_create_tables()
-    else:
-        print 'usage: python ' + sys.argv[0] + ' create-db (will drop and recreate db)'
