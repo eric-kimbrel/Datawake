@@ -106,15 +106,6 @@ CREATE TABLE domain_extractor_web_index (
 );
 
 
-DROP TABLE IF EXISTS domain_extractor_runtimes;
-CREATE TABLE domain_extractor_runtimes (
-  domain VARCHAR(300),
-  url varchar(1024),
-  entity_type varchar(100),
-  ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  index(domain(300),url(300))
-);
-
 DROP TABLE IF EXISTS scraping_feedback;
 CREATE TABLE scraping_feedback (
   entity_type varchar(100),

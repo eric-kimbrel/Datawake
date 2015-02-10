@@ -144,15 +144,7 @@ TABLES['domain_extractor_web_index'] = """
     )
 """
 
-TABLES['domain_extractor_runtimes'] = """
-  CREATE TABLE domain_extractor_runtimes (
-      domain VARCHAR(300),
-      url varchar(1024),
-      entity_type varchar(100),
-       ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      index(domain(300),url(300))
-    )
-"""
+
 
 #
 
@@ -675,8 +667,7 @@ def drop_and_create_tables():
             'datawake_data',
             'starred_features',
             'general_extractor_web_index',
-            'domain_extractor_web_index',
-            'domain_extractor_runtimes'
+            'domain_extractor_web_index'
         ]:
             print 'DROP TABLE ', name
             cursor.execute('DROP TABLE IF EXISTS `' + name + '`')
@@ -689,8 +680,7 @@ def drop_and_create_tables():
             'datawake_selections',
             'starred_features',
             'general_extractor_web_index',
-            'domain_extractor_web_index',
-            'domain_extractor_runtimes'
+            'domain_extractor_web_index'
         ]:
             ddl = TABLES[name]
             print("Creating table {}: ".format(name))
