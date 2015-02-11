@@ -1,5 +1,6 @@
 import cherrypy
 from datawake.util.exceptions import datawakeexception
+from datawake.util.db import datawake_mysql
 
 
 def is_in_session(callback):
@@ -42,6 +43,11 @@ def expire_user():
 
 
 def set_user(user):
+    teams = datawake_mysql.getTeams(email=user.get_email())
+    if len(teams) == 0:
+        # create a team with just this user
+        teams = [ datawake_mysql.createTeam(user.get_email(),'Auto generated private team.',emails=[user.get_email()]) ]
+    user.set_teams(teams)
     cherrypy.session['user'] = user
     return True
 

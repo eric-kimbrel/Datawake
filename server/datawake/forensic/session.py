@@ -36,23 +36,16 @@ def get():
 @tangelo.restful
 def post(token=u''):
     user = session_helper.get_user()
-    org = None
-    if user is not None and session_helper.is_token_in_session() and session_helper.get_token() == token:
-        #tangelo.log('plugin-sever.session tokens matched using existing session.')
-        user = session_helper.get_user()
-    else:
+
+    if user is None:
         auth_helper = factory.get_authentication_object(token,MOCK_FORENSIC_AUTH)
         user = auth_helper.get_user_from_token()
         tangelo.log('session.post verified user: ' + str(user))
-    orgs = datawake_mysql.getOrgLinks(user.get_email())
-    if len(orgs) == 1:
-        org = orgs[0]
-    else:
-        raise ValueError("No org was found for this user.")
 
-    user.set_org(org)
-    session_helper.set_user(user)
-    session_helper.set_token(token)
+
+        session_helper.set_user(user)
+        session_helper.set_token(token)
+
     return json.dumps(user.__dict__)
 
 

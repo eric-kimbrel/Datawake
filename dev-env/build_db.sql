@@ -2,11 +2,24 @@
 CREATE DATABASE IF NOT EXISTS memex_sotera;
 USE memex_sotera;
 
-DROP TABLE IF EXISTS datawake_org;
-CREATE TABLE datawake_org (
-  email VARCHAR(300),
-  org VARCHAR(300)
+
+DROP TABLE IF EXISTS datawake_teams;
+CREATE TABLE datawake_teams (
+  id INT NOT NULL AUTO_INCREMENT,
+  name VARCHAR(100),
+  description TEXT,
+  PRIMARY KEY(id),
+  UNIQUE (name)
 );
+
+
+DROP TABLE IF EXISTS datawake_team_users;
+CREATE TABLE datawake_team_users (
+  team_id INT,
+  email VARCHAR(245),
+  FOREIGN KEY (team_id) REFERENCES datawake_teams(id) ON DELETE CASCADE
+);
+
 
 
 DROP TABLE IF EXISTS datawake_domains;

@@ -3,7 +3,7 @@ class User(object):
         self.user_name = user_name
         self.user_id = user_id
         self.email = email
-        self.org = None
+        self.teams = []
 
     def get_user_name(self):
         return self.user_name
@@ -11,11 +11,15 @@ class User(object):
     def get_user_id(self):
         return self.user_id
 
+    def get_teams(self):
+        return self.teams
+
+    # TODO, remove this method and add support for multiple teams for each user.
     def get_org(self):
-        return self.org
+        return self.teams[0][1]
 
     def get_email(self):
         return self.email
 
-    def set_org(self, org):
-        self.org = org
+    def set_teams(self, teams):
+        self.teams = teams

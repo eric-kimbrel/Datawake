@@ -227,36 +227,38 @@ def getSelections(domain, trail, url, org):
 # ##  ORGANIZATIONS  ###
 
 
-#
-# Add a link from email address to org
-#
-def addOrgLink(emailAddress, orgName):
-    emailAddress = emailAddress.lower()
-    orgName = orgName.upper()
-    sql = "INSERT INTO datawake_org (email,org) VALUES (%s,%s)"
-    params = [emailAddress, orgName]
-    return dbCommitSQL(sql, params)
+
 
 
 #
-# Delete a link from email address to org
+# Return a list or (team_id,team_name)
 #
-def deleteOrgLink(emailAddress, orgName):
-    emailAddress = emailAddress.lower()
-    orgName = orgName.upper()
-    sql = "DELETE FROM datawake_org WHERE email = %s AND org = %s"
-    params = [emailAddress, orgName]
-    return dbCommitSQL(sql, params)
+def getTeams(email):
+
+    sql = """
+        SELECT t1.id,t1.name
+        FROM datawake_teams as t1
+        INNER JOIN datawake_team_users as t2
+        WHERE t2.email = %s
+    """
+    rows = dbGetRows(sql, [email])
+    return rows
 
 
 #
-# Return a list or orgs linked to an email
+# Create a new team
 #
-def getOrgLinks(emailAddress):
-    sql = "SELECT org from datawake_org where email = %s"
-    params = [emailAddress.lower()]
-    rows = dbGetRows(sql, params)
-    return map(lambda x: x[0], rows)
+def createTeam(name,description,emails=[]):
+    team_id = dbCommitSQL("INSERT INTO datawake_teams (name,description) VALUES (%s,%s)",[name,description])
+    inserts = []
+    params = []
+    for email in emails:
+        inserts.append("INSERT INTO datawake_team_users (team_id,email) VALUES (%s,%s)")
+        params.append(team_id)
+        params.append(email)
+    dbCommitSQL(';'.join(inserts),params)
+    return (team_id,name)
+
 
 
 #
