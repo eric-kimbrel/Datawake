@@ -122,6 +122,16 @@ def getBrowsePathData(org, id, domain='default'):
     }
 
 
+def getBrowsePathUrls(org, trail):
+    org = org.upper()
+    sql = "SELECT url FROM datawake_data where org = %s AND trail=%s"
+    params = [org, trail]
+    return  map(lambda x: x[0],dbGetRows(sql, params))
+
+
+
+
+
 #
 # Get all time stamps from the selected trail,users,org
 # returns a dictionary of the form  {'min':0,'max':0,'data':[]}

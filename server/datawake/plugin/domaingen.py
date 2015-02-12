@@ -29,30 +29,32 @@ import datawake.util.dataconnector.factory as factory
 
 """
 
+
 #
 # Perform a starts-with search for trails
 #
 @tangelo.restful
 @is_in_session
 @required_parameters(['domain','trail'])
-def get(domain,trail,stars):
+def get(domain,trail,stars,newdomain):
     org = helper.get_org().upper()
-    tangelo.log("TRAIL REPORT: domain="+domain+" trail="+trail+" org="+org)
 
-    trail_report = {}
+    if not db.domain_exists(newdomain):
+        db.add_new_domain(newdomain,'auto generated domain from trail: '+trail)
+
+    features = set([])
+    url_set = set([])
     stars = int(stars)
     # get all stared urls for the trail
 
 
     for (url,rank) in db.getRankedUrls(org,trail,domain):
-        if url not in trail_report and rank >= stars:
-            trail_report[url] = {'rank':rank, }
+        url_set.add(url)
 
     if stars < 1:
         urls = db.getBrowsePathUrls(org,trail)
         for url in urls:
-            if url not in trail_report:
-                trail_report[url] = {'rank':0 }
+           url_set.add(url)
 
 
     # get the list of invalid entities for the domain
@@ -63,43 +65,30 @@ def get(domain,trail,stars):
 
     # for each url get all extracted entities
     entity_data_connector = factory.get_entity_data_connector()
-    all_entities = entity_data_connector.get_extracted_entities_from_urls(trail_report.keys())
+    all_entities = entity_data_connector.get_extracted_entities_from_urls(url_set)
     for url,featureDict in all_entities.iteritems():
         for type,values in featureDict.iteritems():
+            type = type.replace(',',' ')
             filtered_values = []
             for value in values:
                 if value not in markedEntities:
-                    filtered_values.append(value)
-            if len(filtered_values) > 0:
-                try:
-                    if 'auto_features' not in trail_report[url]: trail_report[url]['auto_features'] = {}
-                    trail_report[url]['auto_features'][type] = filtered_values
-                except:
-                    tangelo.log("report generation error. skipping url.")
-                    continue
+                    value = value.replace(',',' ')
+                    features.add(type+"\0"+value)
+
 
 
     # for each url get any manually extracted entities
-    for url in trail_report.keys():
+    for url in url_set:
         for featureObj in db.get_feedback_entities(org, domain, url):
-            if 'manual_features' not in trail_report[url]:
-                trail_report[url]['manual_features'] = {}
-            if featureObj['type'] not in trail_report[url]['manual_features']:
-                trail_report[url]['manual_features'][featureObj['type']] = []
-            trail_report[url]['manual_features'][featureObj['type']].append(featureObj['value'])
+            type = featureObj['type'].replace(',',' ')
+            value = featureObj['value'].replace(',',' ')
+            features.add(type+"\0"+value)
 
 
-    # for each url get any highlighted text
-    for url in trail_report.keys():
-        selections = db.getSelections(domain, trail, url, org)
-        if len(selections) > 0:
-            trail_report[url]['selections'] = selections
 
 
-    for key,value in trail_report.iteritems():
-        value['url'] = key
-    result = {'trail':trail,'urls':trail_report.values()}
-    return json.dumps(result,sort_keys=True,indent=4,separators=(',',':'))
+
+    entity_data_connector.add_new_domain_items( map(lambda x: newdomain+'\0'+x,features))
 
 
 
