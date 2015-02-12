@@ -13,8 +13,6 @@ DW_DB_USER: database username
 DW_DB_PASSWORD: database password
 DW_DB_HOST: database ip address or hostname
 DW_DB_PORT: database port
-DW_KAFKA_CONN_POOL: comma seperated list of kafka brokers ip:port,..
-DW_KAFKA_PUB_TOPIC: kafka topic to publish visited urls for processing.
 
 
 OPTIONAL ENVIRONMENT VARIABLES
@@ -47,8 +45,6 @@ REQUIRED_PARAMS = [
     'DW_DB_PASSWORD',
     'DW_DB_HOST',
     'DW_DB_PORT',
-    'DW_KAFKA_CONN_POOL',
-    'DW_KAFKA_PUB_TOPIC',
 ]
 not_found = []
 for param in REQUIRED_PARAMS:
@@ -70,8 +66,6 @@ DATAWAKE_CORE_DB = {
     'port': os.environ['DW_DB_PORT']
 }
 
-KAFKA_CONN_POOL=os.environ['DW_KAFKA_CONN_POOL']
-KAFKA_PUBLISH_TOPIC=os.environ['DW_KAFKA_PUB_TOPIC']
 
 
 
