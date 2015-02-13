@@ -22,6 +22,10 @@ def invalid_extraction(entity_type, entity_value, domain):
 def good_extraction(raw_text, entity_type, entity_value, url, domain):
     org = session_helper.get_org()
     success = db.add_extractor_feedback(org, domain, raw_text, entity_type, entity_value, url) == 0
+    if success:
+        tangelo.log("ADDED MANUAL ENTITY "+entity_type+":"+entity_value)
+    else:
+        tangelo.log("FAILED TO MANUAL ADD "+entity_type+":"+entity_value)
     return json.dumps(dict(success=success))
 
 

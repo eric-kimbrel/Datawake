@@ -19,7 +19,12 @@ exports.activeIcon = activeIcon;
 
 var datawakeButton;
 var mainPanel;
+var loginPanel;
 var badgeForTab = {};
+
+var authHelper = require("./auth-helper");
+var signedIn = false;
+var userInfo = null;
 
 
 /**
@@ -42,76 +47,86 @@ function handleHide() {
     datawakeButton.state('window', {checked: false});
 }
 
-/**
- * Function that overrides a new tab.
- */
-function overrideActiveTab() {
-    tabs.activeTab.url = data.url("html/datawake-tab-panel.html");
-}
-
-/**
- * Sets up listeners to update page data
- */
-function setupListeners() {
-    try {
-        mainPanel.port.on("setUrlRank", setUrlRank);
-        mainPanel.port.on("openExternalLink", openExternalTool);
-        mainPanel.port.on("markInvalid", markInvalid);
-    } catch (e) {
-        console.error(e.name + " : " + e.message);
-    }
-}
 
 /**
  * Sets up the required information when the ToggleButton is clicked.
+ * Opens the login or datawake panel as needed
  * @param state The state of the ToggleButton.
  */
 function onToggle(state) {
-    var datawakeInfo = storage.getDatawakeInfo(tabs.activeTab.id);
-    if (datawakeInfo != null && datawakeInfo.isDatawakeOn && constants.isValidUrl(tabs.activeTab.url)) {
-        if (mainPanel != null || mainPanel != undefined)
-            mainPanel.destroy();
-        mainPanel = panel.Panel({
-            width: 800,
-            height: 1000,
-            contentURL: data.url("html/datawake-widget-panel.html"),
-            onHide: handleHide,
-            contentScriptOptions: {
-                starUrl: data.url("css/icons/"),
-                datawakeInfo: datawakeInfo,
-                useDomainFeatures: addOnPrefs.useDomainFeatures,
-                useRanking: addOnPrefs.useRanking,
-                versionNumber: self.version,
-                current_url: tabs.activeTab.url,
-                pageVisits: badgeForTab[tabs.activeTab.id]
 
-            }
-        });
-
-        setupListeners();
-        mainPanel.port.on("init", function () {
-            console.debug("Valid Tab");
-            //Get the rank info and listen for someone ranking the page.
-            emitFeedbackEntities(datawakeInfo.domain.name);
-            emitRanks(datawakeInfo);
-            emitMarkedEntities(datawakeInfo.domain.name);
-            getEntities(datawakeInfo.domain.name, function (entities) {
-                mainPanel.port.emit("entities", entities);
-            });
-            service.getExternalLinks(function (externalLinks) {
-                mainPanel.port.emit("externalLinks", externalLinks);
-            });
-        });
-
-        mainPanel.show({position: datawakeButton});
+    // load the main datawake panel
+    if (signedIn) {
+        launchDatawakePanel();
     }
+    // load the login panel
     else {
-        //Emit that it is not a valid tab.
-        overrideActiveTab();
-        console.debug("Invalid Tab");
+        launchLoginPanel();
     }
 
 }
+
+
+
+function launchDatawakePanel(){
+    var datawakeInfo = storage.getDatawakeInfo(tabs.activeTab.id);
+    if (mainPanel != null || mainPanel != undefined){
+        mainPanel.destroy();
+    }
+
+    mainPanel = panel.Panel({
+        width: 800,
+        height: 1000,
+        contentURL: data.url("html/datawake-widget-panel.html"),
+        onHide: handleHide,
+        contentScriptOptions: {
+            starUrl: data.url("css/icons/"),
+            datawakeInfo: datawakeInfo,
+            useDomainFeatures: addOnPrefs.useDomainFeatures,
+            useRanking: addOnPrefs.useRanking,
+            versionNumber: self.version,
+            current_url: tabs.activeTab.url,
+            pageVisits: badgeForTab[tabs.activeTab.id],
+            userInfo: userInfo,
+            tabId: tabs.activeTab.id
+        }
+    });
+
+    //set up listeners
+    mainPanel.port.on("setUrlRank", setUrlRank);
+    mainPanel.port.on("openExternalLink", openExternalTool);
+    mainPanel.port.on("markInvalid", markInvalid);
+    mainPanel.port.on("signout",function(){
+        signedIn = false
+        authHelper.signOut(function(response) {
+            mainPanel.hide()
+
+        })
+    })
+    mainPanel.port.on("infochanged",function(infoObj){
+        storage.setDatawakeInfo(infoObj.tabId,infoObj.info);
+        mainPanel.port.emit("infosaved",infoObj.info)
+    })
+
+    mainPanel.port.on("init", function () {
+        console.debug("Valid Tab");
+        //Get the rank info and listen for someone ranking the page.
+        emitFeedbackEntities(datawakeInfo.domain.name);
+        emitRanks(datawakeInfo);
+        emitMarkedEntities(datawakeInfo.domain.name);
+        getEntities(datawakeInfo.domain.name, function (entities) {
+            mainPanel.port.emit("entities", entities);
+        });
+        service.getExternalLinks(function (externalLinks) {
+            mainPanel.port.emit("externalLinks", externalLinks);
+        });
+    });
+
+    mainPanel.show({position: datawakeButton});
+
+}
+
+
 
 function getEntities(domain, callback) {
     if (tracking.isTabWorkerAttached(tabs.activeTab.id) && constants.isValidUrl(tabs.activeTab.url)) {
@@ -230,6 +245,8 @@ function cleanUpTab(tabId) {
     deleteBadgeForTab(tabId);
 }
 
+
+
 tabs.on("activate", function (tab) {
     var datawakeInfoForTab = storage.getDatawakeInfo(tab.id);
     if (datawakeInfoForTab != null && datawakeInfoForTab.isDatawakeOn) {
@@ -238,3 +255,45 @@ tabs.on("activate", function (tab) {
         resetIcon();
     }
 });
+
+
+
+
+/**
+ * When the user is not signed in and clicks on the datawake button
+ * we show the login panel.
+ */
+function launchLoginPanel(){
+
+    if (loginPanel != null && loginPanel  != undefined) {
+        loginPanel.destroy()
+    }
+
+    loginPanel  = panel.Panel({
+            contentURL: data.url("html/login-panel.html"),
+            onHide: handleHide,
+            contentScriptOptions: {
+                authType: authHelper.authType()
+            }
+    });
+
+    loginPanel.port.on("signIn", function () {
+            authHelper.signIn(function (response) {
+                signedIn = true;
+                userInfo = response.json
+                loginPanel.port.emit("sendUserInfo", response.json);
+                loginPanel.show()
+            });
+    });
+
+    loginPanel.port.on("signOut", function () {
+            signedIn = false;
+            userInfo = null;
+            authHelper.signOut(function (response) {
+                loginPanel.port.emit("signOutComplete");
+            });
+    });
+
+    loginPanel.show();
+
+}

@@ -2,8 +2,19 @@
 CREATE DATABASE IF NOT EXISTS memex_sotera;
 USE memex_sotera;
 
-
+DROP TABLE IF EXISTS datawake_team_users;
+DROP TABLE IF EXISTS datawake_domains;
+DROP TABLE IF EXISTS datawake_domain_entities;
+DROP TABLE IF EXISTS datawake_trails;
+DROP TABLE IF EXISTS datawake_selections;
+DROP TABLE IF EXISTS datawake_data;
+DROP TABLE IF EXISTS datawake_url_rank;
+DROP TABLE IF EXISTS general_extractor_web_index;
+DROP TABLE IF EXISTS domain_extractor_web_index;
+DROP TABLE IF EXISTS scraping_feedback;
+DROP TABLE IF EXISTS invalid_extracted_entity;
 DROP TABLE IF EXISTS datawake_teams;
+
 CREATE TABLE datawake_teams (
   id INT NOT NULL AUTO_INCREMENT,
   name VARCHAR(100),
@@ -13,7 +24,6 @@ CREATE TABLE datawake_teams (
 );
 
 
-DROP TABLE IF EXISTS datawake_team_users;
 CREATE TABLE datawake_team_users (
   team_id INT,
   email VARCHAR(245),
@@ -21,16 +31,36 @@ CREATE TABLE datawake_team_users (
 );
 
 
-
-DROP TABLE IF EXISTS datawake_domains;
 CREATE TABLE datawake_domains (
+  id INT NOT NULL AUTO_INCREMENT,
   name VARCHAR(300),
   description TEXT,
-  PRIMARY KEY(name)
+  team_id INT,
+  FOREIGN KEY (team_id) REFERENCES datawake_teams(id) ON DELETE CASCADE,
+  PRIMARY KEY(id),
+  UNIQUE (name,team_id)
 );
 
 
-DROP TABLE IF EXISTS datawake_selections;
+CREATE TABLE datawake_domain_entities (
+  domain_id INT,
+  feature_type varchar(100),
+  feature_value varchar(1024),
+  INDEX(domain_id,feature_type(100),feature_value(100))
+);
+
+
+CREATE TABLE datawake_trails (
+  name VARCHAR(100) NOT NULL,
+  created TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  created_by TEXT,
+  description TEXT,
+  org VARCHAR(300),
+  domain VARCHAR(300),
+  PRIMARY KEY(name,org,domain)
+);
+
+
 CREATE TABLE datawake_selections (
   id INT NOT NULL AUTO_INCREMENT,
   postId INT NOT NULL,
@@ -40,7 +70,6 @@ CREATE TABLE datawake_selections (
 );
 
 
-DROP TABLE IF EXISTS datawake_data;
 CREATE TABLE datawake_data (
   id INT NOT NULL AUTO_INCREMENT,
   ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -55,29 +84,6 @@ CREATE TABLE datawake_data (
 );
 
 
-DROP TABLE IF EXISTS datawake_trails;
-CREATE TABLE datawake_trails (
-  name VARCHAR(100) NOT NULL,
-  created TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  created_by TEXT,
-  description TEXT,
-  org VARCHAR(300),
-  domain VARCHAR(300),
-  PRIMARY KEY(name,org,domain)
-);
-
-
-DROP TABLE IF EXISTS starred_features;
-CREATE TABLE starred_features (
-  org VARCHAR(300),
-  trail VARCHAR(100) NOT NULL,
-  type VARCHAR(100),
-  value VARCHAR(1024),
-  INDEX(org,trail)
-);
-
-
-DROP TABLE IF EXISTS datawake_url_rank;
 CREATE TABLE datawake_url_rank (
   id INT NOT NULL AUTO_INCREMENT,
   url TEXT,
@@ -91,14 +97,6 @@ CREATE TABLE datawake_url_rank (
 );
 
 
-DROP TABLE IF EXISTS datawake_domain_entities;
-CREATE TABLE datawake_domain_entities (
-  rowkey varchar(1024),
-  INDEX(rowkey(300))
-);
-
-
-DROP TABLE IF EXISTS general_extractor_web_index;
 CREATE TABLE general_extractor_web_index (
   url varchar(1024),
   entity_type varchar(100),
@@ -108,7 +106,6 @@ CREATE TABLE general_extractor_web_index (
 );
 
 
-DROP TABLE IF EXISTS domain_extractor_web_index;
 CREATE TABLE domain_extractor_web_index (
   domain VARCHAR(300),
   url varchar(1024),
@@ -119,7 +116,6 @@ CREATE TABLE domain_extractor_web_index (
 );
 
 
-DROP TABLE IF EXISTS scraping_feedback;
 CREATE TABLE scraping_feedback (
   entity_type varchar(100),
   entity_value varchar(1024),
@@ -130,7 +126,7 @@ CREATE TABLE scraping_feedback (
   index(org(300),domain(300))
 );
 
-DROP TABLE IF EXISTS invalid_extracted_entity;
+
 CREATE TABLE invalid_extracted_entity (
   entity_value varchar (1024),
   entity_type varchar (100),

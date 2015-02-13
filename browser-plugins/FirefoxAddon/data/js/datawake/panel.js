@@ -6,6 +6,8 @@ var panelApp = angular.module('panelApp', ["ngRoute"]).config(['$provide', funct
     }]);
 }]);
 
+$("[name='my-checkbox']").bootstrapSwitch();
+
 panelApp.controller("PanelCtrl", function ($scope, $document) {
 
     $scope.extracted_tools = [];
@@ -14,9 +16,55 @@ panelApp.controller("PanelCtrl", function ($scope, $document) {
     $scope.domainFeaturesEnabled = addon.options.useDomainFeatures;
     $scope.rankingEnabled = addon.options.useRanking;
     $scope.versionNumber = addon.options.versionNumber;
+    $scope.user = addon.options.userInfo;
     $scope.invalid = {};
     $scope.pageVisits = addon.options.pageVisits;
     $scope.headerPartial = "partials/header-partial.html";
+
+
+
+    // TEAMS
+
+    // set the selected team from the users teams array based on matching ids.
+    // for UI to work correctly the selectedTeam is matched by reference to the team in user.teams
+    $scope.selectedTeam = null;
+    if ($scope.datawake.team){
+        for (i in $scope.user.teams){
+            if ($scope.user.teams[i].id == $scope.datawake.team.id){
+                $scope.selectedTeam = $scope.user.teams[i]
+            }
+        }
+    }
+
+    $scope.teamChanged = function (team) {
+        var info = addon.options.datawakeInfo;
+        info.team = team;
+        addon.port.emit("infochanged",{tabId:  addon.options.tabId, info: info});
+    };
+
+
+
+    // DOMAINS
+
+
+    addon.port.on("sendDomains", function (domains) {
+        $scope.domains = domains;
+        $scope.$apply();
+    });
+
+    $scope.domainChanged = function (domain) {
+        var selected = domain.name;
+        if (selected != null && selected != "") {
+            addon.port.emit("getTrails", selected);
+            $scope.selectedTrail = null;
+        }
+    };
+
+
+    addon.port.on("sendTrails", function (trails) {
+        $scope.trails = trails;
+        $scope.$apply();
+    });
 
 
     addon.port.on("feedbackEntities", function (entities) {
@@ -25,11 +73,6 @@ panelApp.controller("PanelCtrl", function ($scope, $document) {
         });
     });
 
-    addon.port.on("signOutComplete", function () {
-        $scope.$apply(function () {
-            $scope.hideSignInButton = false;
-        });
-    });
 
     addon.port.on("ranking", function (rankingInfo) {
         $scope.$apply(function () {
@@ -57,6 +100,10 @@ panelApp.controller("PanelCtrl", function ($scope, $document) {
     });
 
 
+    $scope.signOut = function(){
+        addon.port.emit("signout");
+    }
+
     $scope.openExternalLink = function (externalUrl) {
         addon.port.emit("openExternalLink", {externalUrl: externalUrl});
     };
@@ -80,6 +127,20 @@ panelApp.controller("PanelCtrl", function ($scope, $document) {
             return $scope.entities_in_domain[type].indexOf(name) >= 0;
         }
     };
+
+    $scope.record = function(recording){
+        var info = addon.options.datawakeInfo;
+        info.isDatawakeOn = recording;
+        addon.port.emit("infochanged",{tabId:  addon.options.tabId, info: info});
+    }
+
+
+
+
+    addon.port.on("infosaved",function(datawakeinfo){
+        $scope.datawake = datawakeinfo;
+        $scope.$apply()
+    })
 
     function createStarRating(starUrl) {
         var starRating = $("#star_rating");

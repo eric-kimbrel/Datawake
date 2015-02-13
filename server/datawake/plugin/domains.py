@@ -20,11 +20,19 @@ import tangelo
 
 from datawake.util.db import datawake_mysql as db
 from datawake.util.session.helper import is_in_session
-
+from datawake.util.session import helper
 
 @tangelo.restful
 @is_in_session
-def get():
-    results = db.get_domains()
-    results = map(lambda x: {'name': x[0], 'description': x[1]}, results)
-    return json.dumps(results)
+@tangelo.types(team_id=int)
+def get(team_id):
+
+    user = helper.get_user()
+
+    if not db.hasTeamAccess(user.get_email(),team_id):
+        tangelo.content_type()
+        tangelo.http_status(401)
+        return "401 Unauthorized"
+    else:
+        results = db.get_domains(team_id)
+        return json.dumps(results)

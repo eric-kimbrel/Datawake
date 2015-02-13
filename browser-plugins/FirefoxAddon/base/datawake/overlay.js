@@ -63,6 +63,7 @@ function setupNewTabListener(worker) {
         });
 
         worker.port.on("signIn", function () {
+            console.debug("overlay.js signIn")
             authHelper.signIn(function (response) {
                 //Just a work around due to the activeTab issue.
                 //SEE: https://bugzilla.mozilla.org/show_bug.cgi?id=942511
@@ -161,6 +162,7 @@ function createTrail(domain, trailname, traildescription, callback) {
  * Triggers the datawake and the page modification for a new tab.
  */
 function useDatawake() {
+    /*
     newtabPageMod = require("sdk/page-mod").PageMod({
         include: data.url("html/datawake-tab-panel.html"),
         contentScriptFile: [
@@ -171,7 +173,7 @@ function useDatawake() {
             data.url("js/datawake/new-tab.js")
         ],
         onAttach: setupNewTabListener
-    });
+    });*/
 
     tabs.on("open", function (tab) {
         var datawakeInfo = storage.getRecentlyUsedDatawakeInfo();

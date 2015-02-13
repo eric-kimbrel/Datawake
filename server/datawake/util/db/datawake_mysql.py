@@ -238,11 +238,25 @@ def getTeams(email):
     sql = """
         SELECT t1.id,t1.name
         FROM datawake_teams as t1
-        INNER JOIN datawake_team_users as t2
-        WHERE t2.email = %s
+        INNER JOIN datawake_team_users as t2 ON t1.id = t2.team_id
+        WHERE  t2.email = %s
     """
     rows = dbGetRows(sql, [email])
-    return rows
+    return map(lambda x: dict(id= x[0], name =x[1]),rows)
+
+
+def hasTeamAccess(email,team_id):
+    teams = getTeams(email)
+    sql = """
+        SELECT t1.id,t1.name
+        FROM datawake_teams as t1
+        INNER JOIN datawake_team_users as t2 ON t1.id = t2.team_id
+        WHERE  t2.email = %s AND t1.id = %s
+    """
+    rows = dbGetRows(sql,[email,team_id])
+    return len(rows) > 0
+
+
 
 
 #
@@ -437,33 +451,25 @@ def getUrlCount(org, url, domain='default'):
 
 
 
-def get_domains(domain=''):
-    sql = "SELECT name,description from datawake_domains"
-    params = []
-    if domain != '':
-        sql = sql + " where domain = %s"
-        params.append(domain)
-    rows = dbGetRows(sql, params)
-    return rows
+def get_domains(team_id):
+    sql = "SELECT id,name,description from datawake_domains where team_id = %s"
+    rows = dbGetRows(sql, [team_id])
+    return map(lambda x: dict(id=x[0],name=x[1],description=x[2]),rows)
 
 
-def add_new_domain(domain, description):
-    sql = "INSERT INTO datawake_domains (name,description) values (%s,%s) ON DUPLICATE KEY UPDATE description = %s"
-    params = [domain, description, description]
+def add_new_domain(team_id,name, description):
+    sql = "INSERT INTO datawake_domains (name,description,team_id) values (%s,%s,%s)"
+    params = [name, description, team_id]
     dbCommitSQL(sql, params)
 
 
-def remove_domain(domain):
-    sql = "DELETE FROM datawake_domains WHERE name = %s"
-    params = [domain]
-    dbCommitSQL(sql, params)
+def remove_domain(domain_id):
+    dbCommitSQL("DELETE FROM datawake_domains WHERE id = %s", [domain_id])
 
 
-def domain_exists(name):
-    sql = "select count(*) from datawake_domains where name=%s"
-    result = dbGetRows(sql, [name])
-    rows = map(lambda x: x[0], result)
-    return rows[0] == 1
+
+
+
 
 
 def add_extractor_feedback(org, domain, raw_text, entity_type, entity_value, url):

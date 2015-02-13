@@ -16,7 +16,7 @@ class User(object):
 
     # TODO, remove this method and add support for multiple teams for each user.
     def get_org(self):
-        return self.teams[0][1]
+        return self.teams[0]['name']
 
     def get_email(self):
         return self.email

@@ -13,9 +13,19 @@ var lastUsedDatawakeInfo = null;
  * @returns {*} Datawake Info Object.
  */
 function getDatawakeInfo(tabId) {
-    if (hasDatawakeInfoForTab(tabId))
-        return datawakeInfoStorage[tabId];
-    return null;
+    if (!hasDatawakeInfoForTab(tabId)) {
+        datawakeInfoStorage[tabId] = newDatawakeInfo()
+    }
+    return datawakeInfoStorage[tabId];
+}
+
+function newDatawakeInfo(){
+    var dataWake = {};
+    dataWake.domain = "this is a silly test";
+    dataWake.trail = null;
+    dataWake.isDatawakeOn = false;
+    dataWake.team = null;
+    return dataWake;
 }
 
 /**
@@ -30,6 +40,9 @@ function setDatawakeInfo(tabId, datawakeInfo) {
 }
 
 function getRecentlyUsedDatawakeInfo(){
+    if (lastUsedDatawakeInfo == null){
+        lastUsedDatawakeInfo = newDatawakeInfo()
+    }
     return lastUsedDatawakeInfo;
 }
 

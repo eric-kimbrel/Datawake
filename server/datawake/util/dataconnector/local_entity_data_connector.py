@@ -17,6 +17,7 @@ limitations under the License.
 """
 
 import mysql.connector
+import tangelo
 
 from datawake.util.dataconnector.data_connector import DataConnector
 
@@ -131,6 +132,8 @@ class MySqlEntityDataConnector(DataConnector):
             return results
         except:
             self.close()
+            tangelo.log(sql)
+            tangelo.log(str(params))
             raise
 
     def get_extracted_domain_entities_for_urls(self, domain, urls):
