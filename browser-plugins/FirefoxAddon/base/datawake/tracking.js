@@ -103,19 +103,30 @@ function trackTab(tab){
 
     //Posts the scrape contents to the server.
     trackingTabWorker.port.on("contents", function (pageContents) {
-        notify("Success: Page content captured.")
-        return;
+
+
         var currentTrackingTabWorker = trackingTabWorkers[tab.id];
         var datawakeInfoForTab = storage.getDatawakeInfo(tab.id);
-        if (addOnPrefs.useScraper) {
+        if (addOnPrefs.useScraper && datawakeInfoForTab && datawakeInfoForTab.isDatawakeOn) {
+
+
             console.debug("Scraping Page");
             pageContents.url = currentTrackingTabWorker.tab.url;
-            pageContents.domain = datawakeInfoForTab.domain.name;
-            pageContents.trail = datawakeInfoForTab.trail.name;
+            pageContents.domain_id = datawakeInfoForTab.domain.id;
+            pageContents.trail_id = datawakeInfoForTab.trail.id;
+            pageContents.team_id = datawakeInfoForTab.team.id;
+
             var url = addOnPrefs.datawakeDeploymentUrl + "/scraper/scrape";
             requestHelper.post(url, JSON.stringify(pageContents), function (response) {
-                console.debug("Setting up selections and advanced search");
-                var scrapeObject = response.json;
+
+                if (response.status != 200){
+                    if (response.body) controller.notifyError(response.body);
+                    console.error(response);
+                    return;
+                }
+                notify("Success: Page recorded.")
+                controller.getFeaturesForPanel();  // re-fetch features for the panel
+
                 //Sets up the context menu objects for this tab.
                 if (currentTrackingTabWorker.tab != null) {
                     getDomainExtractedEntities();

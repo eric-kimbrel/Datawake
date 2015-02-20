@@ -60,15 +60,13 @@ function getDomains(team_id,callback) {
 }
 
 
-function getEntities(domain, url, callback) {
+function getEntities(url, callback) {
     var entitiesUrl = addOnPrefs.datawakeDeploymentUrl + "/visited/entities";
     var post_data = JSON.stringify({
-        url: url,
-        domain: domain
+        url: url
     });
     requestHelper.post(entitiesUrl, post_data, function (response) {
-        var entities = response.json;
-        callback(entities);
+        callback(response);
     });
 }
 

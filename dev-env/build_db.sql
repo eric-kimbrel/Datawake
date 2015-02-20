@@ -65,6 +65,24 @@ CREATE TABLE datawake_trails (
 );
 
 
+CREATE TABLE datawake_data (
+  id INT NOT NULL AUTO_INCREMENT,
+  ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  url TEXT,
+  userEmail TEXT,
+  team_id INT,
+  domain_id INT,
+  trail_id INT,
+  PRIMARY KEY(id),
+  FOREIGN KEY (team_id) REFERENCES datawake_teams(id) ON DELETE CASCADE,
+  FOREIGN KEY (domain_id) REFERENCES datawake_domains(id) ON DELETE CASCADE,
+  FOREIGN KEY (trail_id) REFERENCES datawake_trails(id) ON DELETE CASCADE,
+  INDEX(url(30))
+);
+
+
+
+
 
 CREATE TABLE datawake_selections (
   id INT NOT NULL AUTO_INCREMENT,
@@ -75,18 +93,7 @@ CREATE TABLE datawake_selections (
 );
 
 
-CREATE TABLE datawake_data (
-  id INT NOT NULL AUTO_INCREMENT,
-  ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  url TEXT,
-  userId TEXT,
-  userName TEXT,
-  trail VARCHAR(100),
-  org VARCHAR(300),
-  domain VARCHAR(300),
-  PRIMARY KEY(id),
-  INDEX(url(30))
-);
+
 
 
 CREATE TABLE datawake_url_rank (

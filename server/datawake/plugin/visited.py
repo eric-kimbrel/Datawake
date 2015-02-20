@@ -30,18 +30,17 @@ from datawake.util.session.helper import is_in_session
 
 
 @is_in_session
-@required_parameters(['url', 'domain'])
-def get_all_entities(url, domain):
+@required_parameters(['url'])
+def get_all_entities(url):
     entity_data_connector = None
     try:
         entity_data_connector = factory.get_entity_data_connector()
         all_entities = entity_data_connector.get_extracted_entities_from_urls([url])
-        domain_extracted = entity_data_connector.get_extracted_domain_entities_from_urls(domain, [url])
-        entities = dict(domainExtracted=domain_extracted.get(url, {}), allEntities=all_entities.get(url, {}))
+        entities = all_entities.get(url, {})
         return json.dumps(entities)
-
     finally:
         entity_data_connector.close()
+
 
 
 @is_in_session

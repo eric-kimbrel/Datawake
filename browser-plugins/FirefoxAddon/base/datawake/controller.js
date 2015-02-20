@@ -16,6 +16,8 @@ var trackingHelper = require("./tracking");
 exports.loadDatawake = loadDatawake;
 exports.resetIcon = resetIcon;
 exports.activeIcon = activeIcon;
+exports.notifyError = notifyError;
+exports.getFeaturesForPanel = getFeaturesForPanel;
 
 var datawakeButton;
 var mainPanel;
@@ -260,9 +262,7 @@ function launchDatawakePanel(){
         //emitFeedbackEntities(datawakeInfo.domain.name);
         //emitRanks(datawakeInfo);
         //emitMarkedEntities(datawakeInfo.domain.name);
-        //getEntities(datawakeInfo.domain.name, function (entities) {
-        //    mainPanel.port.emit("entities", entities);
-        //});
+        getFeaturesForPanel();
         //service.getExternalLinks(function (externalLinks) {
         //    mainPanel.port.emit("externalLinks", externalLinks);
         //});
@@ -272,6 +272,21 @@ function launchDatawakePanel(){
 
     mainPanel.show({position: datawakeButton});
 
+}
+
+
+/**
+ *
+ */
+function getFeaturesForPanel(){
+   if (mainPanel){
+       if (constants.isValidUrl(tabs.activeTab.url)) {
+           service.getEntities(tabs.activeTab.url, function(response){
+               if (response.status != 200) notifyError("Error getting features for this url.")
+               else mainPanel.port.emit("entities", response.json);
+           });
+       }
+   }
 }
 
 /**
@@ -330,13 +345,9 @@ function changeDomain(tabId,newdomain,callback){
 }
 
 
-function getEntities(domain, callback) {
-    if (tracking.isTabWorkerAttached(tabs.activeTab.id) && constants.isValidUrl(tabs.activeTab.url)) {
-        service.getEntities(domain, tabs.activeTab.url, callback);
-    } else {
-        console.debug("The Datawake is not on for this tab.");
-    }
-}
+
+
+
 /**
  * Marks an entity as invalid
  * @param entity Object(entity_value, entity_type, domain)

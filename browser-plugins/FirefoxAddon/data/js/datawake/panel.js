@@ -182,12 +182,10 @@ panelApp.controller("PanelCtrl", function ($scope, $document) {
         });
     });
 
-    addon.port.on("entities", function (extractedEntities) {
-        $scope.$apply(function () {
-            console.debug("Parsing Extracted Entities...");
-            $scope.extracted_entities_dict = extractedEntities.allEntities;
-            $scope.entities_in_domain = extractedEntities.domainExtracted;
-        });
+    addon.port.on("entities", function (features) {
+        console.log(features);
+        $scope.extracted_entities_dict = features;
+        $scope.$apply();
     });
 
 
@@ -222,7 +220,7 @@ panelApp.controller("PanelCtrl", function ($scope, $document) {
     });
 
     $scope.isExtracted = function (type, name) {
-        if ($scope.entities_in_domain.hasOwnProperty(type)) {
+        if ($scope.entities_in_domain && $scope.entities_in_domain.hasOwnProperty(type)) {
             return $scope.entities_in_domain[type].indexOf(name) >= 0;
         }
     };

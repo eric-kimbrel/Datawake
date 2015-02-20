@@ -83,43 +83,31 @@ def dbGetRows(sql, params):
 
 # ###   BROWSE PATH SCRAPE  ###
 
+"""
+CREATE TABLE datawake_data (
+  id INT NOT NULL AUTO_INCREMENT,
+  ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  url TEXT,
+  userEmail TEXT,
+  team_id INT,
+  domain_id INT,
+  trail_id INT,
+  PRIMARY KEY(id),
+  FOREIGN KEY (team_id) REFERENCES datawake_teams(id) ON DELETE CASCADE,
+  FOREIGN KEY (domain_id) REFERENCES datawake_domains(id) ON DELETE CASCADE,
+  FOREIGN KEY (trail_id) REFERENCES datawake_trails(id) ON DELETE CASCADE,
+  INDEX(url(30))
+);
+"""
 
 #
 # Add a post to the posts table (datawake_data)
 #
-def addBrowsePathData(org, url, userId, userName, trail=None, domain='default'):
-    org = org.upper()
-    sql = " INSERT INTO datawake_data (url,userId,userName,trail,org,domain) VALUES (%s,%s,%s,%s,%s,%s) "
-    params = [url, userId, userName, trail, org, domain]
+def addBrowsePathData(team_id,domain_id,trail_id,url, userEmail):
+    sql = " INSERT INTO datawake_data (url,userEmail,team_id,domain_id,trail_id) VALUES (%s,%s,%s,%s,%s) "
+    params = [url,userEmail,team_id,domain_id,trail_id]
     lastId = dbCommitSQL(sql, params)
     return lastId
-
-
-def get_post_id(url):
-    sql = "select id from datawake_data where url=%s limit 1;"
-    params = [url]
-    rows = dbGetRows(sql, params)
-    if len(rows) == 0:
-        return -1
-    return rows[0][0]
-
-
-#
-# Get a post from the posts table (datwake_data)
-#
-
-def getBrowsePathData(org, id, domain='default'):
-    org = org.upper()
-    sql = "SELECT id,ts,url,trail,org FROM datawake_data where org = %s AND id = %s AND domain = %s"
-    params = [org, id, domain]
-    row = dbGetRows(sql, params)[0]
-    return {
-        'id': row[0],
-        'ts': row[1],
-        'url': row[2].encode(),
-        'trail': row[3],
-        'org': row[4]
-    }
 
 
 #
@@ -434,10 +422,9 @@ def getRankedUrls(org, trail, domain='default'):
 # Get the number of times a url has been recorded
 # by the data wake
 #
-def getUrlCount(org, url, domain='default'):
-    org = org.upper()
-    sql = "SELECT count(1) from datawake_data where url = %s AND org = %s AND domain = %s "
-    params = [url, org, domain]
+def getUrlCount(team_id,domain_id,trail_id, url):
+    sql = "SELECT count(1) from datawake_data where url = %s AND team_id = %s AND domain_id = %s AND trail_id = %s"
+    params = [url, team_id, domain_id,trail_id]
     rows = dbGetRows(sql, params)
     if len(rows) == 0:
         return 0
