@@ -7,9 +7,69 @@ def is_in_session(callback):
     def has_session(**kwargs):
         if 'user' in cherrypy.session:
             return callback(**kwargs)
-        raise datawakeexception.SessionError(repr(callback), "No User in the current session")
-
+        tangelo.http_status(401)
+        tangelo.log("401 Unauthorized No user in session")
+        return "No User in the current session"
     return has_session
+
+
+
+def has_team(callback):
+    """
+    Decorator for tangelo web services.
+    Requires a team_id and checks that the current user has permissions for that team
+    :param callback:
+    :return:
+    """
+    def verifyTeamId(**kwargs):
+        if 'team_id' not in kwargs:
+            tangelo.http_status(500)
+            tangelo.log("team_id required.")
+            return "team id required for this call."
+
+        user = get_user()
+
+        # verify the user can access the team
+        if not datawake_mysql.hasTeamAccess(user.get_email(),kwargs['team_id']):
+            tangelo.content_type()
+            tangelo.http_status(401)
+            tangelo.log("401 Unauthorized. User has no access to requested team.")
+            return "401 Unauthorized"
+
+        return callback(**kwargs)
+    return verifyTeamId
+
+
+def has_domain(callback):
+    """
+    Decorator for tangelo web servcies
+    Requires a team_id and domain_id, checks that the team can access the domain
+    :param callback:
+    :return:
+    """
+    def verifyDomainId(**kwargs):
+
+        if 'team_id' not in kwargs or 'domain_id' not in kwargs:
+            tangelo.http_status(500)
+            tangelo.log("team_id and domain_id required.")
+            return "team id required for this call."
+
+        team_id = int(kwargs['team_id'])
+        domain_id = int(kwargs['domain_id'])
+        # verify the team can access the domain
+        domains = datawake_mysql.get_domains(team_id)
+        valid = False
+        for domain in domains:
+            if domain['id'] == domain_id:
+                valid = True
+                break
+        if not valid:
+            tangelo.http_status(401)
+            tangelo.log("401 Unauthorized. Team has no access to requested domain")
+            return "401 Unauthorized"
+        return callback(**kwargs)
+    return verifyDomainId
+
 
 
 def get_user():

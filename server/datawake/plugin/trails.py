@@ -14,21 +14,20 @@ Copyright 2014 Sotera Defense Solutions, Inc.
    limitations under the License.
 """
 
-import re
-import json
+
 
 import tangelo
-
+import json
 import datawake.util.db.datawake_mysql as db
 from datawake.util.session.helper import is_in_session
+from datawake.util.session.helper import has_team
+from datawake.util.session.helper import has_domain
 from datawake.util.session import helper
-from datawake.util.validate.parameters import required_parameters
 
 
 """
- List / Create Trails
+ Web service to List / Create Trails
 
-    primarily used on the plugin newTab.
 
 """
 
@@ -37,7 +36,8 @@ from datawake.util.validate.parameters import required_parameters
 #
 @tangelo.restful
 @is_in_session
-@required_parameters(['domain_id','team_id'])
+@has_team
+@has_domain
 @tangelo.types(domain_id=int,team_id=int)
 def get(team_id,domain_id):
     """
@@ -48,38 +48,14 @@ def get(team_id,domain_id):
     :return: Trails for the team and domain.
       [{id:trailid,name:trailname,description:traildescriptin},..]
     """
-
-    user = helper.get_user()
-
-    # verify the user can access the team
-    if not db.hasTeamAccess(user.get_email(),team_id):
-        tangelo.content_type()
-        tangelo.http_status(401)
-        tangelo.log("401 Unauthorized")
-        return "401 Unauthorized"
-
-    # verify the team can access the domain
-    domains = db.get_domains(team_id)
-    valid = False
-    for domain in domains:
-        if domain['id'] == domain_id:
-            valid = True
-            break
-    if not valid:
-        tangelo.content_type()
-        tangelo.http_status(401)
-        tangelo.log("401 Unauthorized ")
-        return "401 Unauthorized"
-
-
-    # get and return the trails
     trails = db.listTrails(team_id, domain_id)
     return json.dumps(trails)
 
 
 
 @is_in_session
-@required_parameters(['team_id','domain_id', 'name'])
+@has_team
+@has_domain
 @tangelo.types(domain_id=int,team_id=int)
 def add_trail(team_id,domain_id,name,description=''):
 
@@ -90,26 +66,6 @@ def add_trail(team_id,domain_id,name,description=''):
         raise ValueError("Trail names must have at least one character")
 
     user = helper.get_user()
-
-    # verify the user can access the team
-    if not db.hasTeamAccess(user.get_email(),team_id):
-        tangelo.content_type()
-        tangelo.http_status(401)
-        tangelo.log("401 Unauthorized")
-        return "401 Unauthorized"
-
-    # verify the team can access the domain
-    domains = db.get_domains(team_id)
-    valid = False
-    for domain in domains:
-        if domain['id'] == domain_id:
-            valid = True
-            break
-    if not valid:
-        tangelo.content_type()
-        tangelo.http_status(401)
-        tangelo.log("401 Unauthorized ")
-        return "401 Unauthorized"
 
     # create and then return the new trail
     try:
