@@ -22,23 +22,25 @@ var signedIn = false;
  * Gets the domains from the server.
  * @param callback Response callback.
  */
+/*
 function getDomains(callback) {
     var url = addOnPrefs.datawakeDeploymentUrl + "/domains";
     requestHelper.get(url, callback);
-}
+}*/
 
 /**
  * Gets the trails for a specific domain.
  * @param domain Domain to use to get trails.
  * @param callback Response callback.
  */
+/*
 function getTrails(domain, callback) {
     var url = addOnPrefs.datawakeDeploymentUrl + "/trails/get";
     var post_data = JSON.stringify({
         domain: domain
     });
     requestHelper.post(url, post_data, callback);
-}
+}*/
 
 /**
  * Function for setting up a new tab and it's listeners.

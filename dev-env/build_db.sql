@@ -51,14 +51,19 @@ CREATE TABLE datawake_domain_entities (
 
 
 CREATE TABLE datawake_trails (
+  id INT NOT NULL AUTO_INCREMENT,
   name VARCHAR(100) NOT NULL,
   created TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  created_by TEXT,
+  created_by VARCHAR(245),
   description TEXT,
-  org VARCHAR(300),
-  domain VARCHAR(300),
-  PRIMARY KEY(name,org,domain)
+  team_id INT,
+  domain_id INT,
+  FOREIGN KEY (team_id) REFERENCES datawake_teams(id) ON DELETE CASCADE,
+  FOREIGN KEY (domain_id) REFERENCES datawake_domains(id) ON DELETE CASCADE,
+  PRIMARY KEY(id),
+  UNIQUE(domain_id,name)
 );
+
 
 
 CREATE TABLE datawake_selections (

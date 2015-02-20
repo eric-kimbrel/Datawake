@@ -43,7 +43,18 @@ DatawakeHTTPHelper.LocalConnectionHandler.prototype = {
 
         // Construct an HTTP channel with the given nsIProxyInfo.
         // https://developer.mozilla.org/en-US/docs/XPCOM_Interface_Reference/nsIHttpChannel
-        var uri = DatawakeHTTPHelper.ioService.newURI(req.url, null, null);
+        var uri;
+        if (req.content) {
+            var url = req.url+"?"
+            for (param in req.content){
+                url = url + param + "="+req.content[param]+"&"
+            }
+            url = url.substring(0,url.length-1)
+            uri = DatawakeHTTPHelper.ioService.newURI(url,null,null)
+        }
+        else{
+            uri = DatawakeHTTPHelper.ioService.newURI(req.url, null, null);
+        }
         this.channel = DatawakeHTTPHelper.httpProtocolHandler.newProxiedChannel(uri, proxyInfo, 0, null)
             .QueryInterface(Ci.nsIHttpChannel);
         if (req.header !== undefined) {

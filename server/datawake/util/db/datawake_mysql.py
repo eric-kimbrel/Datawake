@@ -301,11 +301,10 @@ def addTrail(org, name, description, userId, domain='default'):
 #
 # Get a list of all trails name and description
 #
-def listTrails(org, domain='default'):
-    org = org.upper()
-    sql = "select name,description,unix_timestamp(created) from datawake_trails where org = %s AND domain = %s ORDER BY created DESC"
-    rows = dbGetRows(sql, [org, domain])
-    return map(lambda x: {'name': x[0], 'description': x[1], 'created': x[2]}, rows)
+def listTrails(team_id, domain_id):
+    sql = "select id,name,description from datawake_trails where team_id = %s AND domain_id = %s ORDER BY created DESC"
+    rows = dbGetRows(sql, [team_id, domain_id])
+    return map(lambda x: dict(id=x[0], name= x[1], description= x[2]), rows)
 
 
 #

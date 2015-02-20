@@ -10,6 +10,9 @@ $("[name='my-checkbox']").bootstrapSwitch();
 
 panelApp.controller("PanelCtrl", function ($scope, $document) {
 
+    $scope.teamSpinner = true;
+    $scope.domainSpinner = true;
+    $scope.trailSpinner = true;
     $scope.extracted_tools = [];
     $scope.datawake = addon.options.datawakeInfo;
     $scope.current_url = addon.options.current_url;
@@ -20,51 +23,126 @@ panelApp.controller("PanelCtrl", function ($scope, $document) {
     $scope.invalid = {};
     $scope.pageVisits = addon.options.pageVisits;
     $scope.headerPartial = "partials/header-partial.html";
+    $scope.domains = addon.options.domains;
+    if (! $scope.domains ) $scope.domains = [];
+    $scope.trails = []
 
-
+    console.log("opening panel for tab: "+addon.options.tabId)
+    console.log($scope.datawake)
 
     // TEAMS
+    $scope.teams = [];
+    if ($scope.datawake && $scope.datawake.team ) $scope.teams.push($scope.datawake.team)
+    $scope.selectedTeam = ($scope.datawake && $scope.datawake.team ) ? $scope.datawake.team : null;
 
-    // set the selected team from the users teams array based on matching ids.
-    // for UI to work correctly the selectedTeam is matched by reference to the team in user.teams
-    $scope.selectedTeam = null;
-    if ($scope.datawake.team){
-        for (i in $scope.user.teams){
-            if ($scope.user.teams[i].id == $scope.datawake.team.id){
-                $scope.selectedTeam = $scope.user.teams[i]
+    // when teams are returned  from the server set the selected team as the matching element from the teams array
+    addon.port.on("teams",function(teams){
+        $scope.teams = teams;
+        $scope.selectedTeam = null;
+        if ($scope.datawake.team){
+            for (i in $scope.teams){
+                if ($scope.teams[i].id == $scope.datawake.team.id){
+                    $scope.selectedTeam = $scope.teams[i]
+                }
             }
         }
-    }
+        $scope.teamSpinner = false;
+        $scope.$apply();
+        console.log("GOT TEAMS")
+        console.log(teams)
+    });
 
     $scope.teamChanged = function (team) {
-        var info = addon.options.datawakeInfo;
-        info.team = team;
-        addon.port.emit("infochanged",{tabId:  addon.options.tabId, info: info});
+        $scope.datawake.team = team;
+        $scope.datawake.domain = null;
+        $scope.datawake.trail = null;
+        $scope.isDatawakeOn = false;
+        $scope.domains = []
+        $scope.trails = []
+        $scope.domainSpinner = true;
+        addon.port.emit("changeTeam",{tabId:  addon.options.tabId, team: team});
+        console.log("teamChanged")
+        console.log($scope.datawake)
     };
 
 
 
     // DOMAINS
+    if (! $scope.datawake.team) $scope.domainSpinner = false;
+    $scope.domains =[];
+    if ($scope.datawake && $scope.datawake.domain ) $scope.domains.push($scope.datawake.domain)
+    $scope.selectedDomain = ($scope.datawake && $scope.datawake.domain ) ? $scope.datawake.domian : null;
 
-
-    addon.port.on("sendDomains", function (domains) {
+    // when domains come in from the server set the selected domain to the matching element
+    addon.port.on("domains", function (domains) {
+        $scope.selectedDomain = null;
         $scope.domains = domains;
-        $scope.$apply();
+        if ( $scope.datawake.domain && $scope.domains){
+            for (i in $scope.domains){
+                if ($scope.domains[i].id == $scope.datawake.domain.id){
+                    $scope.selectedDomain = $scope.domains[i]
+                }
+            }
+        }
+        $scope.domainSpinner = false;
+        $scope.$apply()
+        console.log("GOT DOMAINS")
+        console.log(domains)
     });
 
     $scope.domainChanged = function (domain) {
-        var selected = domain.name;
-        if (selected != null && selected != "") {
-            addon.port.emit("getTrails", selected);
-            $scope.selectedTrail = null;
-        }
+        $scope.datawake.domain = domain;
+        $scope.datawake.trail = null;
+        $scope.isDatawakeOn = false;
+        $scope.trails = [];
+        $scope.trailSpinner = true;
+        addon.port.emit("changeDomain",{tabId:  addon.options.tabId, domain: $scope.datawake.domain});
+        console.log("domainChanged")
+        console.log($scope.datawake)
+
     };
 
 
-    addon.port.on("sendTrails", function (trails) {
+    // TRAILS
+    if ( !$scope.datawake.team || ! $scope.datawake.domain ) $scope.trailSpinner = false;
+    $scope.trails = [];
+    if ($scope.datawake && $scope.datawake.trail) $scope.trails.push($scope.datawake.trail);
+    $scope.selectedTrail = ($scope.datawake && $scope.datawake.trail) ? $scope.datawake.trail : null;
+
+    addon.port.on("trails", function (trails) {
         $scope.trails = trails;
+        $scope.selectedTrail = null;
+        if ( $scope.datawake.trail && $scope.trails){
+            for (i in $scope.trails){
+                if ($scope.trails[i].id == $scope.datawake.trail.id){
+                    $scope.selectedTrail= $scope.trails[i]
+                }
+            }
+        }
+        $scope.trailSpinner = false;
         $scope.$apply();
+        console.log("GOT TRAILS")
+        console.log(trails)
     });
+
+    $scope.trailChanged = function(trail){
+        $scope.datawake.trail = trail;
+        $scope.datawake.isDatawakeOn = false;
+        addon.port.emit("infochanged",{tabId:  addon.options.tabId, info: $scope.datawake});
+        console.log("trailChanged")
+        console.log($scope.datawake)
+    };
+
+
+
+    // Recording
+    $scope.recordingChange = function(recording){
+        $scope.datawake.isDatawakeOn = recording;
+        addon.port.emit("infochanged",{tabId:  addon.options.tabId, info: $scope.datawake});
+        console.log("recordingChange")
+        console.log($scope.datawake)
+    }
+
 
 
     addon.port.on("feedbackEntities", function (entities) {
@@ -101,7 +179,7 @@ panelApp.controller("PanelCtrl", function ($scope, $document) {
 
 
     $scope.signOut = function(){
-        addon.port.emit("signout");
+        addon.port.emit("signOut");
     }
 
     $scope.openExternalLink = function (externalUrl) {
@@ -128,19 +206,16 @@ panelApp.controller("PanelCtrl", function ($scope, $document) {
         }
     };
 
-    $scope.record = function(recording){
-        var info = addon.options.datawakeInfo;
-        info.isDatawakeOn = recording;
-        addon.port.emit("infochanged",{tabId:  addon.options.tabId, info: info});
-    }
 
 
 
-
-    addon.port.on("infosaved",function(datawakeinfo){
+   addon.port.on("infosaved",function(datawakeinfo){
         $scope.datawake = datawakeinfo;
         $scope.$apply()
+       console.log("ON INFO SAVED")
+       console.log($scope.datawake)
     })
+
 
     function createStarRating(starUrl) {
         var starRating = $("#star_rating");

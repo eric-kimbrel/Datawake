@@ -18,7 +18,7 @@ function postRequest(url, post_data, callback) {
     request.makeRequest(req);
 }
 
-function getRequest(url, callback) {
+function getRequest(url, callback,params) {
     var request = new DatawakeHTTPHelper.LocalConnectionHandler(callback);
     var req = {};
     req.url = url;
@@ -27,5 +27,8 @@ function getRequest(url, callback) {
     req.proxy.type = "http";
     req.proxy.host = addOnPrefs.proxyHost;
     req.proxy.port = addOnPrefs.proxyPort;
+    if(params){
+        req.content = params
+    }
     request.makeRequest(req);
 }

@@ -6,6 +6,36 @@ var requestHelper = require("./request-helper");
 exports.getEntities = getEntities;
 exports.getDomainExtractedEntities = getDomainExtractedEntities;
 exports.getExternalLinks = getExternalLinks;
+exports.getDomains = getDomains;
+exports.getTeams = getTeams;
+exports.getTrails = getTrails;
+
+
+function getTrails(team_id,domain_id,callback){
+    var url = addOnPrefs.datawakeDeploymentUrl + "/trails";
+    var params = {team_id:team_id, domain_id:domain_id};
+    requestHelper.get(url,callback,params);
+}
+
+/**
+ * Gets the valid teams for the current user from the server
+ * @param callback Response callback.
+ */
+function getTeams(callback) {
+    var url = addOnPrefs.datawakeDeploymentUrl + "/teams";
+    requestHelper.get(url,callback);
+}
+
+
+/**
+ * Gets the domains from the server.
+ * @param callback Response callback.
+ */
+function getDomains(team_id,callback) {
+    var url = addOnPrefs.datawakeDeploymentUrl + "/domains";
+    var params = {team_id:team_id}
+    requestHelper.get(url,callback,params);
+}
 
 
 function getEntities(domain, url, callback) {

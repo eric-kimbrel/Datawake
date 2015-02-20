@@ -24,23 +24,11 @@ from datawake.util.session import helper
 
 @tangelo.restful
 @is_in_session
-@tangelo.types(team_id=int)
-def get(team_id):
-
+def get():
     """
-    Verify the logged in user has access to the requested team and return that teams list of domains.
-    :param team_id:
-    :return: List of domain objects for the team
-            [{'id':domain_id,'name','name':domainname,'description':domaindescription},..]
+    Return valid teams for the current user.
+   [{id: team_id, name:team_name},..]
     """
-
     user = helper.get_user()
-
-    if not db.hasTeamAccess(user.get_email(),team_id):
-        tangelo.content_type()
-        tangelo.http_status(401)
-        tangelo.log("401 Unauthorized domains/?team_id="+str(team_id)+" user: "+str(user))
-        return "401 Unauthorized"
-    else:
-        results = db.get_domains(team_id)
-        return json.dumps(results)
+    teams = db.getTeams(user.get_email())
+    return json.dumps(teams)

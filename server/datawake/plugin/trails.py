@@ -35,17 +35,48 @@ from datawake.util.validate.parameters import required_parameters
 #
 # Perform a starts-with search for trails
 #
+@tangelo.restful
 @is_in_session
-@required_parameters(['domain'])
-def get_trails(domain):
-    org = helper.get_org()
-    return get_trails_for_domain_and_org(org, domain)
+@required_parameters(['domain_id','team_id'])
+@tangelo.types(domain_id=int,team_id=int)
+def get(team_id,domain_id):
+    """
+    Verifies the current signed in user has access to the domain and team,
+    then returns trails
+    :param team_id:
+    :param domain_id:
+    :return: Trails for the team and domain.
+      [{id:trailid,name:trailname,description:traildescriptin},..]
+    """
+
+    user = helper.get_user()
+
+    # verify the user can access the team
+    if not db.hasTeamAccess(user.get_email(),team_id):
+        tangelo.content_type()
+        tangelo.http_status(401)
+        tangelo.log("401 Unauthorized")
+        return "401 Unauthorized"
+
+    # verify the team can access the domain
+    domains = db.get_domains(team_id)
+    valid = False
+    for domain in domains:
+        if domain['id'] == domain_id:
+            valid = True
+            break
+    if not valid:
+        tangelo.content_type()
+        tangelo.http_status(401)
+        tangelo.log("401 Unauthorized ")
+        return "401 Unauthorized"
 
 
-def get_trails_for_domain_and_org(org, domain):
-    trails = db.listTrails(org, domain)
-    response = dict(trails=trails)
-    return json.dumps(response)
+    # get and return the trails
+    trails = db.listTrails(team_id, domain_id)
+    return json.dumps(trails)
+
+
 
 
 @is_in_session
@@ -62,7 +93,6 @@ def add_trail(trailname, domain, traildescription=u''):
 
 
 post_actions = {
-    'get': get_trails,
     'create': add_trail
 }
 

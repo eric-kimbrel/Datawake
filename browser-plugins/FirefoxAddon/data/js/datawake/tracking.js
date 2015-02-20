@@ -5,13 +5,15 @@ function scrapePage() {
         var pageContents = {
             html: encodeURIComponent($('body').html())
         };
-        console.debug("Emitting page contents....");
+        console.log("Emitting page contents....");
         addon.port.emit("contents", pageContents);
     }
     catch (e) {
         console.error("Unable to Scrape Page: " + e);
     }
 }
+
+
 
 addon.port.on("loadToolTips", function (urls) {
     try {

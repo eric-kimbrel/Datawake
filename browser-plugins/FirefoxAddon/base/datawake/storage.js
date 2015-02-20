@@ -3,9 +3,52 @@ exports.setDatawakeInfo = setDatawakeInfo;
 exports.deleteDatawakeInfo = deleteDatawakeInfo;
 exports.hasDatawakeInfoForTab = hasDatawakeInfoForTab;
 exports.getRecentlyUsedDatawakeInfo = getRecentlyUsedDatawakeInfo;
+exports.clear = clear;
 
+
+/*  Maps tabid -> datawakeinfo object*/
 var datawakeInfoStorage = {};
+
+/* datawakeinfo object for most recently active tab */
 var lastUsedDatawakeInfo = null;
+
+
+/**
+ * Clear all storage
+ */
+function clear(){
+   datawakeInfoStorage = {}
+   lastUsedDatawakeInfo = null;
+}
+
+/**
+ * Create a new datawakeinfo object
+ * @returns new blank datawakeinfo object
+ */
+function newDatawakeInfo(){
+    var dataWake = {};
+    dataWake.domain = null;
+    dataWake.trail = null;
+    dataWake.isDatawakeOn = false;
+    dataWake.team = null;
+    return dataWake;
+}
+
+
+/**
+ * Copies a datawakeinfo object
+ * @param original
+ * @returns new object with copied fields
+ */
+function copyDatawakeInfo(original){
+    var copy = newDatawakeInfo();
+    copy.domain = original.domain;
+    copy.trail = original.trail;
+    copy.isDatawakeOn = original.isDatawakeOn;
+    copy.team = original.team;
+    return copy
+}
+
 
 /**
  * Function for getting the datawake information associated with a tab.
@@ -16,17 +59,10 @@ function getDatawakeInfo(tabId) {
     if (!hasDatawakeInfoForTab(tabId)) {
         datawakeInfoStorage[tabId] = newDatawakeInfo()
     }
+    lastUsedDatawakeInfo = datawakeInfoStorage[tabId];
     return datawakeInfoStorage[tabId];
 }
 
-function newDatawakeInfo(){
-    var dataWake = {};
-    dataWake.domain = "this is a silly test";
-    dataWake.trail = null;
-    dataWake.isDatawakeOn = false;
-    dataWake.team = null;
-    return dataWake;
-}
 
 /**
  * Sets the Datawake info for a specific tab.
@@ -41,9 +77,10 @@ function setDatawakeInfo(tabId, datawakeInfo) {
 
 function getRecentlyUsedDatawakeInfo(){
     if (lastUsedDatawakeInfo == null){
-        lastUsedDatawakeInfo = newDatawakeInfo()
+        lastUsedDatawakeInfo = newDatawakeInfo();
+        return lastUsedDatawakeInfo;
     }
-    return lastUsedDatawakeInfo;
+    return copyDatawakeInfo(lastUsedDatawakeInfo);
 }
 
 /**

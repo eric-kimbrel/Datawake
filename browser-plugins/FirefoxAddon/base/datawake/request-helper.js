@@ -31,12 +31,15 @@ function postRequest(url, post_data, callback) {
  * @param url The url to request.
  * @param callback Response callback.
  */
-function getRequest(url, callback) {
+function getRequest(url, callback,params) {
     var getObject = Request({
         url: url,
         contentType: "application/json",
         onComplete: callback
     });
+    if (params){
+        getObject.content = params
+    }
     getObject.get();
 }
 
@@ -81,7 +84,7 @@ function proxyPost(url, post_data, callback) {
     })
 }
 
-function proxyGet(url, callback) {
+function proxyGet(url, callback,params) {
     requestWrapper.getRequest(url, function (resp) {
         var response = {};
         if (resp.status === 200) {
@@ -95,5 +98,5 @@ function proxyGet(url, callback) {
             callback(resp);
         }
 
-    });
+    },params);
 }
