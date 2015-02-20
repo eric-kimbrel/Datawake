@@ -292,10 +292,9 @@ def getActiveUsers(org):
 #
 # Ad a new trail to the trails table
 #
-def addTrail(org, name, description, userId, domain='default'):
-    org = org.upper()
-    sql = "INSERT INTO datawake_trails (name,description,created_by,org,domain) values (%s,%s,%s,%s,%s)"
-    return dbCommitSQL(sql, [name, description, userId, org, domain])
+def addTrail(team_id,domain_id,name, description, userEmail):
+    sql = "INSERT INTO datawake_trails (team_id,domain_id,name,description,created_by) values (%s,%s,%s,%s,%s)"
+    return dbCommitSQL(sql, [team_id,domain_id, name, description, userEmail])
 
 
 #

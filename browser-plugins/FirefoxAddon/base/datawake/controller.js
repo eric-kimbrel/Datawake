@@ -192,6 +192,19 @@ function launchDatawakePanel(){
         mainPanel.port.emit("infosaved",info)
     })
 
+
+    mainPanel.port.on("createTrail",function(data){
+       var callback = function(response){
+           if (response.status != 200){
+               if (response.body) notifyError(response.body)
+           }
+           else{
+               mainPanel.port.emit("trailCreated",response.json);
+           }
+       }
+       service.createTrail(data.team_id,data.domain_id,data.name,data.description,callback);
+    });
+
     mainPanel.port.on("signOut", function () {
         authHelper.signOut(function (response) {
             clearAllState()
@@ -416,7 +429,13 @@ function resetIcon() {
 
 
 
-
+function notifyError(message){
+    notifications.notify({
+        title: "Datawake Error",
+        text: message,
+        iconURL: self.data.url("img/waveicon38.png"),
+    });
+}
 
 
 

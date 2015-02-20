@@ -78,18 +78,50 @@ def get(team_id,domain_id):
 
 
 
-
 @is_in_session
-@required_parameters(['domain', 'trailname'])
-def add_trail(trailname, domain, traildescription=u''):
-    tangelo.log('datawake_trails POST trailname=%s traildescription=%s domain=%s' % (trailname, traildescription, domain))
+@required_parameters(['team_id','domain_id', 'name'])
+@tangelo.types(domain_id=int,team_id=int)
+def add_trail(team_id,domain_id,name,description=''):
+
+    tangelo.log('datawake_trails POST name=%s description=%s domain=%s team=%s' % (name, description, domain_id,team_id))
+
+    #check the trail name
+    if name is None or len(name) < 1:
+        raise ValueError("Trail names must have at least one character")
+
     user = helper.get_user()
-    org = user.get_org()
-    invalid = re.match('^[\w]*(?!:)+$', trailname) is None
-    if invalid:
-        raise ValueError("Trail names must be alphanumeric and not contain a ':'")
-    last_row = db.addTrail(org, trailname, traildescription, user.get_email(), domain=domain)
-    return json.dumps(dict(success=last_row >= 0))
+
+    # verify the user can access the team
+    if not db.hasTeamAccess(user.get_email(),team_id):
+        tangelo.content_type()
+        tangelo.http_status(401)
+        tangelo.log("401 Unauthorized")
+        return "401 Unauthorized"
+
+    # verify the team can access the domain
+    domains = db.get_domains(team_id)
+    valid = False
+    for domain in domains:
+        if domain['id'] == domain_id:
+            valid = True
+            break
+    if not valid:
+        tangelo.content_type()
+        tangelo.http_status(401)
+        tangelo.log("401 Unauthorized ")
+        return "401 Unauthorized"
+
+    # create and then return the new trail
+    try:
+        newTrailId = db.addTrail(team_id,domain_id,name, description, user.get_email())
+        newTrail = dict(id=newTrailId,name=name,description=description)
+        tangelo.log(newTrail)
+        return json.dumps(newTrail)
+    except Exception as e:
+        tangelo.log(e)
+        tangelo.http_status(501)
+        return "Failed to create trail. This trail name may already be used."
+
 
 
 post_actions = {

@@ -134,6 +134,27 @@ panelApp.controller("PanelCtrl", function ($scope, $document) {
     };
 
 
+    $scope.newTrail = function(team,domain,newTrailName,newTrailDesc){
+        var data = {}
+        data.team_id = team.id;
+        data.domain_id = domain.id;
+        data.name = newTrailName
+        data.description = (newTrailDesc) ? newTrailDesc : "";
+        $scope.trailChanged(null);
+        $scope.newTrailName = null;
+        addon.port.emit("createTrail",data);
+    }
+
+
+    addon.port.on("trailCreated",function(trail){
+        $scope.trails.push(trail)
+        $scope.selectedTrail = trail
+        $scope.datawake.trail = trail;
+        addon.port.emit("infochanged",{tabId:  addon.options.tabId, info: $scope.datawake});
+        $scope.apply()
+    });
+
+
 
     // Recording
     $scope.recordingChange = function(recording){

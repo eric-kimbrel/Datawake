@@ -9,12 +9,34 @@ exports.getExternalLinks = getExternalLinks;
 exports.getDomains = getDomains;
 exports.getTeams = getTeams;
 exports.getTrails = getTrails;
+exports.createTrail = createTrail;
 
 
+/**
+ * Get trails for a team and domain
+ * @param team_id
+ * @param domain_id
+ * @param callback
+ */
 function getTrails(team_id,domain_id,callback){
     var url = addOnPrefs.datawakeDeploymentUrl + "/trails";
     var params = {team_id:team_id, domain_id:domain_id};
     requestHelper.get(url,callback,params);
+}
+
+
+function createTrail(team_id,domain_id,name,description,callback){
+    var url = addOnPrefs.datawakeDeploymentUrl + "/trails/create";
+    var post_data = JSON.stringify({
+        team_id: team_id,
+        domain_id: domain_id,
+        name: name,
+        description: description
+    });
+    requestHelper.post(url, post_data, function (response) {
+        callback(response);
+    });
+
 }
 
 /**
