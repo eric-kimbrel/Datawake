@@ -1,4 +1,5 @@
 var addon = self;
+
 var panelApp = angular.module('panelApp', ["ngRoute"]).config(['$provide', function ($provide) {
     $provide.decorator('$sniffer', ['$delegate', function ($delegate) {
         $delegate.history = false;
@@ -8,8 +9,28 @@ var panelApp = angular.module('panelApp', ["ngRoute"]).config(['$provide', funct
 
 $("[name='my-checkbox']").bootstrapSwitch();
 
-panelApp.controller("PanelCtrl", function ($scope, $document) {
 
+
+// directive to load a file model
+panelApp.directive('fileModel', ['$parse', function ($parse) {
+    return {
+        restrict: 'A',
+        link: function(scope, element, attrs) {
+            var model = $parse(attrs.fileModel);
+            var modelSetter = model.assign;
+
+            element.bind('change', function(){
+                scope.$apply(function(){
+                    modelSetter(scope, element[0].files[0]);
+                });
+            });
+        }
+    };
+}]);
+
+
+
+panelApp.controller("PanelCtrl", function ($scope, $document) {
     $scope.teamSpinner = true;
     $scope.domainSpinner = true;
     $scope.trailSpinner = true;
@@ -23,9 +44,13 @@ panelApp.controller("PanelCtrl", function ($scope, $document) {
     $scope.invalid = {};
     $scope.pageVisits = addon.options.pageVisits;
     $scope.headerPartial = "partials/header-partial.html";
+    $scope.createTrailPartial = "partials/trail-modal-partial.html";
+    $scope.createDomainPartial = "partials/domain-modal-partial.html";
+    $scope.createTeamPartial =  "partials/team-modal-partial.html"
     $scope.domains = addon.options.domains;
     if (! $scope.domains ) $scope.domains = [];
     $scope.trails = []
+
 
     console.log("opening panel for tab: "+addon.options.tabId)
     console.log($scope.datawake)
@@ -266,9 +291,17 @@ panelApp.controller("PanelCtrl", function ($scope, $document) {
         addon.port.emit("setUrlRank", rank_data);
     }
 
+
+
+
     addon.port.emit("init");
 
 });
+
+
+
+
+
 
 panelApp.config(['$routeProvider',
     function ($routeProvider) {

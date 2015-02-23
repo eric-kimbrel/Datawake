@@ -213,6 +213,7 @@ function launchDatawakePanel(){
         });
     });
 
+
     mainPanel.port.on("init", function () {
         console.debug("Valid Tab");
 
