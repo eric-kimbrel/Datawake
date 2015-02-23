@@ -207,9 +207,13 @@ panelApp.controller("PanelCtrl", function ($scope, $document) {
         });
     });
 
-    addon.port.on("entities", function (features) {
-        console.log(features);
+    addon.port.on("features", function (features) {
         $scope.extracted_entities_dict = features;
+        $scope.$apply();
+    });
+
+    addon.port.on("domain_features", function (features) {
+        $scope.domain_extracted_entities_dict = features;
         $scope.$apply();
     });
 

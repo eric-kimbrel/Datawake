@@ -111,20 +111,20 @@ CREATE TABLE datawake_url_rank (
 
 CREATE TABLE general_extractor_web_index (
   url varchar(1024),
-  entity_type varchar(100),
-  entity_value varchar(1024),
+  feature_type varchar(100),
+  feature_value varchar(1024),
   ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   index(url(300))
 );
 
 
 CREATE TABLE domain_extractor_web_index (
-  domain VARCHAR(300),
+  domain_id INT,
   url varchar(1024),
-  entity_type varchar(100),
-  entity_value varchar(1024),
+  feature_type varchar(100),
+  feature_value varchar(1024),
   ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  index(domain(300),url(300))
+  index(domain_id,url(300))
 );
 
 

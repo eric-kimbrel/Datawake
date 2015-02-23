@@ -36,14 +36,14 @@ class DataConnector:
     def get_matching_entities_from_url(self, urls):
         raise NotImplementedError("Implement get_matching_entities_from_url() ")
 
-    def get_extracted_domain_entities_for_urls(self, domain, urls):
+    def get_extracted_domain_entities_for_urls(self, domain_id, urls):
         raise NotImplementedError("Implement get_extracted_domain_entities_for_urls")
 
     def get_extracted_entities_from_urls(self, urls, type=None):
         raise NotImplementedError("Implement getExtractedEntitiesFromUrls()")
 
 
-    def get_extracted_domain_entities_from_urls(self, domain, urls, type=None):
+    def get_extracted_domain_entities_from_urls(self, domain_id, urls, type=None):
         raise NotImplementedError("Implement getExtractedDomainEntitiesFromUrls()")
 
 
@@ -51,7 +51,7 @@ class DataConnector:
         raise NotImplementedError("Implement getExtractedEntitiesWithDomainCheck()")
 
 
-    def get_domain_entity_matches(self, domain, type, values):
+    def get_domain_entity_matches(self, domain_id, type, values):
         raise NotImplementedError("Implement getEntityMatches()")
 
 
@@ -71,9 +71,6 @@ class DataConnector:
         raise NotImplementedError("Implement insertEntities()")
 
 
-    def insert_domain_entities(self, domain,url, entity_type, entity_values):
+    def insert_domain_entities(self, domain_id,url, entity_type, entity_values):
         raise NotImplementedError("Implement insertDomainEntities()")
 
-
-    def get_domain_entity_matches(self, domain, type, values):
-        raise NotImplementedError("Implement getEntityMatches()")

@@ -70,15 +70,15 @@ function getEntities(url, callback) {
     });
 }
 
-function getDomainExtractedEntities(domain, url, callback){
+function getDomainExtractedEntities(team_id,domain_id, url, callback){
     var entitiesUrl = addOnPrefs.datawakeDeploymentUrl + "/visited/extracted";
     var post_data = JSON.stringify({
         url: url,
-        domain: domain
+        domain_id: domain_id,
+        team_id: team_id
     });
     requestHelper.post(entitiesUrl, post_data, function (response) {
-        var domainExtracted = response.json;
-        callback(domainExtracted);
+        callback(response);
     });
 }
 

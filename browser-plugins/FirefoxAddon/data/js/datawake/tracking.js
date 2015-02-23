@@ -49,7 +49,11 @@ addon.port.on("highlight", function (selectionObject) {
 });
 
 addon.port.on("highlightTrailEntities", function(trailEntities){
+    console.log("highlightTrailEntities")
+    console.log(trailEntities)
     $.each(trailEntities, function(index, entity){
+        console.log(index)
+        console.log(entity)
         $("body").highlight(entity, "trailentities");
     });
 });
@@ -64,51 +68,59 @@ addon.port.on("promptForFeedback", function(obj){
 });
 
 addon.port.on("highlightWithToolTips", function (helperObject) {
-    console.debug("Highlight with tool tips..");
     var entities = helperObject.entities;
     var externalLinks = helperObject.links;
-    $.each(entities, function (index, typeObj) {
-        var value = typeObj.name;
-        var key = typeObj.type;
-        var i = index;
-        $('body').highlight(value, 'datawake-highlight-' + i);
-        if (externalLinks.length > 0) {
-            var content = '<div> <h4>' + key + ":" + value + '</h4>';
-            for (var j in externalLinks) {
-                var linkObj = externalLinks[j];
-                var link = linkObj.link;
-                link = link.replace("$ATTR", encodeURI(key));
-                link = link.replace("$VALUE", encodeURI(value));
-                content = content + '<a href="' + link + '" target="_blank">' + linkObj.display + '</a><br>'
+
+    var i = 0;
+    $.each(entities, function (type, values) {
+        for (index in values){
+            i = i + 1
+            var value = values[index]
+            console.log("looking to highlight value: "+value)
+            try{
+                $('body').highlight(value, 'datawake-highlight-' + i);
+                if (externalLinks.length > 0) {
+                    var content = '<div> <h4>' + key + ":" + value + '</h4>';
+                    for (var j in externalLinks) {
+                        var linkObj = externalLinks[j];
+                        var link = linkObj.link;
+                        link = link.replace("$ATTR", encodeURI(type));
+                        link = link.replace("$VALUE", encodeURI(value));
+                        content = content + '<a href="' + link + '" target="_blank">' + linkObj.display + '</a><br>'
+                    }
+                    content = content + '</div>';
+                    $('.datawake-highlight-' + i).tooltipster({
+                        content: $(content),
+                        animation: 'fade',
+                        interactive: true,
+                        delapy: 200,
+                        theme: 'tooltipster-noir',
+                        trigger: 'hover'
+                    });
+                }
+                else {
+                    $('.datawake-highlight-' + i).tooltipster({
+                        content: $('<div>' +
+                                '<h4>' + type + ":" + value + '</h4>' +
+                                'no external tools available' +
+                                '</div>'
+                        ),
+                        animation: 'fade',
+                        interactive: true,
+                        delapy: 200,
+                        theme: 'tooltipster-noir',
+                        trigger: 'hover'
+                    });
+                }
             }
-            content = content + '</div>';
-            $('.datawake-highlight-' + i).tooltipster({
-                content: $(content),
-                animation: 'fade',
-                interactive: true,
-                delapy: 200,
-                theme: 'tooltipster-noir',
-                trigger: 'hover'
-            });
-
-
-        }
-        else {
-            $('.datawake-highlight-' + i).tooltipster({
-                content: $('<div>' +
-                        '<h4>' + key + ":" + value + '</h4>' +
-                        'no external tools available' +
-                        '</div>'
-                ),
-                animation: 'fade',
-                interactive: true,
-                delapy: 200,
-                theme: 'tooltipster-noir',
-                trigger: 'hover'
-            });
+            catch(err){
+                console.log(err)
+            }
         }
     })
 });
+
+
 $(document).ready(function () {
     addon.port.emit("getToolTips");
     $(window).on('hashchange', scrapePage);

@@ -125,7 +125,7 @@ function trackTab(tab){
                     return;
                 }
                 notify("Success: Page recorded.")
-                controller.getFeaturesForPanel();  // re-fetch features for the panel
+                controller.getFeaturesForPanel(datawakeInfoForTab);  // re-fetch features for the panel
 
                 //Sets up the context menu objects for this tab.
                 if (currentTrackingTabWorker.tab != null) {
@@ -170,17 +170,19 @@ function getDomainExtractedEntities() {
     if (isTabWorkerAttached(tabs.activeTab.id) && constants.isValidUrl(tabs.activeTab.url)) {
         var datawakeInfo = storage.getDatawakeInfo(tabs.activeTab.id);
         var tabUrl = tabs.activeTab.url;
-        service.getDomainExtractedEntities(datawakeInfo.domain.name, tabUrl, function (entities) {
-            if (entities.domainExtracted != null && Object.keys(entities.domainExtracted).length > 0) {
-                var entitiesInDomain = getEntitiesInDomain(entities.domainExtracted);
+        service.getDomainExtractedEntities(datawakeInfo.team.id,datawakeInfo.domain.id, tabUrl, function (response) {
+                if (response.status != 200){
+                    console.error("Error getting domain entities in tracking.js")
+                    return;
+                }
+                var entitiesInDomain = response.json;
                 highlightExtractedLinks(entitiesInDomain);
-                if (entitiesInDomain.length > 0) {
+                if (Object.keys(entitiesInDomain).length > 0) {
                     console.debug("Domain matches found on url: " + tabUrl + " setting badge RED");
                     //TODO: When badges get added, change the color here.
                 } else {
                     console.debug("no domain matches found on url: " + tabUrl);
                 }
-            }
         });
     }
 }

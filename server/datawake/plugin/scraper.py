@@ -47,10 +47,13 @@ def scrape_page(team_id,domain_id,trail_id,url,content,userEmail):
 
     for type,values in features.iteritems():
         connector.insert_entities(url,type,values)
-    #     if len(values) > 0:
-    #         features_in_domain = connector.get_domain_entity_matches(str(domain_id),type,values)
-    #         if len(features_in_domain) > 0:
-    #             connector.insert_domain_entities(str(domain_id),url, type, features_in_domain)
+        if len(values) > 0:
+            features_in_domain = connector.get_domain_entity_matches(domain_id,type,values)
+            if len(features_in_domain) > 0:
+                tangelo.log("INSERTING DOMAIN ENTITIES")
+                tangelo.log(type)
+                tangelo.log(features_in_domain)
+                connector.insert_domain_entities(str(domain_id),url, type, features_in_domain)
 
 
 

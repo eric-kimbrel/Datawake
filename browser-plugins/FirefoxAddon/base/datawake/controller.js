@@ -263,7 +263,7 @@ function launchDatawakePanel(){
         //emitFeedbackEntities(datawakeInfo.domain.name);
         //emitRanks(datawakeInfo);
         //emitMarkedEntities(datawakeInfo.domain.name);
-        getFeaturesForPanel();
+        getFeaturesForPanel(datawakeInfo);
         //service.getExternalLinks(function (externalLinks) {
         //    mainPanel.port.emit("externalLinks", externalLinks);
         //});
@@ -279,13 +279,20 @@ function launchDatawakePanel(){
 /**
  *
  */
-function getFeaturesForPanel(){
+function getFeaturesForPanel(datawakeinfo){
    if (mainPanel){
        if (constants.isValidUrl(tabs.activeTab.url)) {
+
            service.getEntities(tabs.activeTab.url, function(response){
                if (response.status != 200) notifyError("Error getting features for this url.")
-               else mainPanel.port.emit("entities", response.json);
+               else mainPanel.port.emit("features", response.json);
            });
+
+           service.getDomainExtractedEntities(datawakeinfo.team.id,datawakeinfo.domain.id,tabs.activeTab.url,function(response){
+               if (response.status != 200) notifyError("Error getting domain features for this url.")
+               else mainPanel.port.emit("domain_features", response.json);
+           });
+
        }
    }
 }

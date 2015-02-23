@@ -21,7 +21,8 @@ import tangelo
 import datawake.util.dataconnector.factory as factory
 from datawake.util.validate.parameters import required_parameters
 from datawake.util.session.helper import is_in_session
-
+from datawake.util.session.helper import has_team
+from datawake.util.session.helper import has_domain
 
 """
   Return the list of entities extracted from a url
@@ -44,13 +45,16 @@ def get_all_entities(url):
 
 
 @is_in_session
-@required_parameters(['url', 'domain'])
-def get_domain_extracted_entities(url, domain):
+@has_team
+@has_domain
+@required_parameters(['url', 'domain_id','team_id'])
+@tangelo.types(domain_id=int,team_id=int)
+def get_domain_extracted_entities(url, domain_id,team_id):
     entity_data_connector = None
     try:
         entity_data_connector = factory.get_entity_data_connector()
-        domain_entities = entity_data_connector.get_extracted_domain_entities_from_urls(domain, [url])
-        return json.dumps(dict(domainExtracted=domain_entities.get(url)))
+        domain_entities = entity_data_connector.get_extracted_domain_entities_from_urls(domain_id, [url])
+        return json.dumps(domain_entities.get(url))
     finally:
         if entity_data_connector is not None:
             entity_data_connector.close()
