@@ -70,7 +70,8 @@ addon.port.on("promptForFeedback", function(obj){
 addon.port.on("highlightWithToolTips", function (helperObject) {
     var entities = helperObject.entities;
     var externalLinks = helperObject.links;
-
+    console.log("highlightWithToolTips")
+    console.log(helperObject)
     var i = 0;
     $.each(entities, function (type, values) {
         for (index in values){
@@ -80,7 +81,7 @@ addon.port.on("highlightWithToolTips", function (helperObject) {
             try{
                 $('body').highlight(value, 'datawake-highlight-' + i);
                 if (externalLinks.length > 0) {
-                    var content = '<div> <h4>' + key + ":" + value + '</h4>';
+                    var content = '<div> <h4>' + type + ":" + value + '</h4>';
                     for (var j in externalLinks) {
                         var linkObj = externalLinks[j];
                         var link = linkObj.link;

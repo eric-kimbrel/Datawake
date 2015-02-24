@@ -264,9 +264,9 @@ function launchDatawakePanel(){
         //emitRanks(datawakeInfo);
         //emitMarkedEntities(datawakeInfo.domain.name);
         getFeaturesForPanel(datawakeInfo);
-        //service.getExternalLinks(function (externalLinks) {
-        //    mainPanel.port.emit("externalLinks", externalLinks);
-        //});
+        service.getExternalLinks(function (externalLinks) {
+            mainPanel.port.emit("externalLinks", externalLinks);
+        });
     });
 
 
