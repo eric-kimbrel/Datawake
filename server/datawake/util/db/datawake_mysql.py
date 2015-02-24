@@ -193,29 +193,24 @@ def deleteUserData(org, user, startdate, enddate, domain='default'):
 # Associate a text selection with a post Id
 # by adding it to the selections table
 #
-def addSelection(postId, selection):
-    sql = " INSERT INTO datawake_selections (postId,selection) VALUES (%s,%s) "
-    return dbCommitSQL(sql, [postId, selection])
+def addSelection(trail_id,userEmail,url, selection):
+    sql = " INSERT INTO datawake_selections (trail_id,userEmail,url, selection) VALUES (%s,%s,%s,%s) "
+    return dbCommitSQL(sql, [trail_id,userEmail,url,selection])
 
 
-def getSelections(domain, trail, url, org):
-    sql = """SELECT datawake_selections.selection
-              FROM datawake_selections
-              INNER JOIN datawake_data
-              ON datawake_selections.postId=datawake_data.id
-              WHERE datawake_data.url = %s
-              AND datawake_data.domain = %s
-              AND datawake_data.trail = %s
-              AND datawake_data.org = %s"""
-    params = [url, domain, trail, org]
+def getSelections(trail_id, url):
+    sql = """
+        SELECT ts,userEmail,selection FROM datawake_selections
+        WHERE trail_id = %s and url=%s
+    """
+    params = [trail_id,url]
     rows = dbGetRows(sql, params)
-    return map(lambda x: x[0], rows)
-
-
-# ##  ORGANIZATIONS  ###
+    return map(lambda x: dict(ts=str(x[0]),userEmail=x[1],selection=x[2]), rows)
 
 
 
+
+# ##  TEAMS  ###
 
 
 #

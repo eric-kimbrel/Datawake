@@ -85,20 +85,27 @@ function saveFeedback(raw_text, url, domain) {
 }
 
 /**
- * Highlights all text on the current page.
+ * Highlights all selction text on the current page.
  * @param tabId The Id of the tab to highlight.
  * @param datawakeInfo The datawake information associated with this request.
  */
 function highlightAllTextOnPage(tabId, datawakeInfo) {
-    var tabUrl = tabs.activeTab.url;
     var post_data = JSON.stringify({
-        domain: datawakeInfo.domain.name,
-        trail: datawakeInfo.trail.name,
-        url: tabUrl
+        team_id: datawakeInfo.team.id,
+        domain_id: datawakeInfo.domain.id,
+        trail_id: datawakeInfo.trail.id,
+        url: tabs.activeTab.url
     });
     var post_url = addOnPrefs.datawakeDeploymentUrl + "/selections/get";
     requestHelper.post(post_url, post_data, function (response) {
-        tracking.emitHighlightTextToTabWorker(tabId, response.json);
+        if (response.status != 200){
+            // TODO error handling
+            console.error(response)
+        }
+        else{
+            tracking.emitHighlightTextToTabWorker(tabId, response.json);
+        }
+
     });
 }
 
@@ -110,10 +117,11 @@ function highlightAllTextOnPage(tabId, datawakeInfo) {
  */
 function saveWindowSelection(datawakeInfo, url, selectionText) {
     var post_data = JSON.stringify({
+        team_id: datawakeInfo.team.id,
+        domain_id: datawakeInfo.domain.id,
+        trail_id: datawakeInfo.trail.id,
         url: url,
-        selection: selectionText,
-        domain: datawakeInfo.domain.name,
-
+        selection: selectionText
     });
     var post_url = addOnPrefs.datawakeDeploymentUrl + "/selections/save";
     requestHelper.post(post_url, post_data, function (response) {

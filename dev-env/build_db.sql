@@ -98,31 +98,19 @@ CREATE TABLE datawake_url_rank (
 );
 
 
-
-
 CREATE TABLE datawake_selections (
   id INT NOT NULL AUTO_INCREMENT,
-  postId INT NOT NULL,
+  ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  trail_id INT,
+  userEmail VARCHAR(245),
+  url TEXT,
   selection TEXT,
   PRIMARY KEY(id),
-  INDEX(postId)
+  INDEX(trail_id,url(60))
 );
 
 
 
-
-
-CREATE TABLE datawake_url_rank (
-  id INT NOT NULL AUTO_INCREMENT,
-  url TEXT,
-  userId TEXT,
-  trailname VARCHAR(100),
-  rank INT,
-  org VARCHAR(300),
-  domain VARCHAR(300),
-  PRIMARY KEY(id),
-  INDEX(url(30),userId(20),trailname)
-);
 
 
 CREATE TABLE general_extractor_web_index (

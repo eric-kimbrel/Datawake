@@ -38,13 +38,15 @@ addon.port.on("loadToolTips", function (urls) {
 });
 
 addon.port.on("removeSelections", function(className){
+    console.log("removing hightlight for class: "+className)
     $("body").removeHighlight(className);
 });
 
 
 addon.port.on("highlight", function (selectionObject) {
-    $.each(selectionObject.selections, function(index, item){
-        $('body').highlight(item, "selections");
+    $.each(selectionObject, function(index, item){
+        console.log("highlighting selection: "+item.selection)
+        $('body').highlight(item.selection, "selections");
     });
 });
 

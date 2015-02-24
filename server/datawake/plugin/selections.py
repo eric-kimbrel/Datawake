@@ -15,11 +15,11 @@ Copyright 2014 Sotera Defense Solutions, Inc.
 """
 
 import json
-
 import tangelo
-
 import datawake.util.db.datawake_mysql as db
 from datawake.util.session.helper import is_in_session
+from datawake.util.session.helper import has_team
+from datawake.util.session.helper import has_trail
 from datawake.util.session import helper
 from datawake.util.validate.parameters import required_parameters
 
@@ -33,24 +33,25 @@ from datawake.util.validate.parameters import required_parameters
 
 
 @is_in_session
-@required_parameters(['selection', 'domain', 'url'])
-def save_page_selection(selection, domain, url):
-    #tangelo.log('savePageSelection url=' + str(url) + ' selection=' + selection + ' domain=' + domain)
+@has_team
+@has_trail
+@required_parameters(['selection', 'url'])
+@tangelo.types(team_id=int,domain_id=int,trail_id=int)
+def save_page_selection(team_id,domain_id,trail_id,selection, url):
     user = helper.get_user()
-    org = user.get_org()
-    postId = db.get_post_id(url)
-    row = db.getBrowsePathData(org, postId, domain)
-    row_id = -1
-    if row['org'] == org:  # ensure the user is saving a selection to a post from their org
-        row_id = db.addSelection(postId, selection)
+    row_id = db.addSelection(trail_id,user.get_email(),url, selection)
     return json.dumps(dict(id=row_id))
 
 
+
 @is_in_session
-@required_parameters(['domain', 'trail', 'url'])
-def get_selections(domain, trail, url):
-    org = helper.get_org()
-    return json.dumps(dict(selections=db.getSelections(domain, trail, url, org)))
+@has_team
+@has_trail
+@required_parameters(['url'])
+@tangelo.types(team_id=int,domain_id=int,trail_id=int)
+def get_selections(team_id,domain_id,trail_id,url):
+    selections = db.getSelections(trail_id, url)
+    return json.dumps(selections)
 
 
 post_actions = {

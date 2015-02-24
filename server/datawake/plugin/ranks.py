@@ -43,6 +43,7 @@ from datawake.util.validate.parameters import required_parameters
 @has_team
 @has_trail
 @required_parameters([ 'url'])
+@tangelo.types(team_id=int,domain_id=int,trail_id=int)
 def get_rank(team_id,domain_id,trail_id, url):
     user = helper.get_user()
     url = url.encode('utf-8')
@@ -59,7 +60,7 @@ def get_rank(team_id,domain_id,trail_id, url):
 @has_team
 @has_trail
 @required_parameters(['url','rank'])
-@tangelo.types(rank=int)
+@tangelo.types(team_id=int,domain_id=int,trail_id=int,rank=int)
 def set_rank(team_id,domain_id,trail_id,url,rank):
     user = helper.get_user()
     db.rankUrl(team_id,domain_id,trail_id,user.get_email(),url,rank)
