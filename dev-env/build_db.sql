@@ -69,7 +69,7 @@ CREATE TABLE datawake_data (
   id INT NOT NULL AUTO_INCREMENT,
   ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   url TEXT,
-  userEmail TEXT,
+  userEmail VARCHAR(245),
   team_id INT,
   domain_id INT,
   trail_id INT,
@@ -80,6 +80,22 @@ CREATE TABLE datawake_data (
   INDEX(url(30))
 );
 
+
+
+CREATE TABLE datawake_url_rank (
+  id INT NOT NULL AUTO_INCREMENT,
+  url TEXT,
+  userEmail VARCHAR(245),
+  team_id INT,
+  domain_id INT,
+  trail_id INT,
+  rank INT,
+  PRIMARY KEY(id),
+  FOREIGN KEY (team_id) REFERENCES datawake_teams(id) ON DELETE CASCADE,
+  FOREIGN KEY (domain_id) REFERENCES datawake_domains(id) ON DELETE CASCADE,
+  FOREIGN KEY (trail_id) REFERENCES datawake_trails(id) ON DELETE CASCADE,
+  INDEX(trail_id,userEmail(30),url(30))
+);
 
 
 

@@ -1,33 +1,12 @@
 var addon = self;
 
+
 var panelApp = angular.module('panelApp', ["ngRoute"]).config(['$provide', function ($provide) {
     $provide.decorator('$sniffer', ['$delegate', function ($delegate) {
         $delegate.history = false;
         return $delegate;
     }]);
 }]);
-
-$("[name='my-checkbox']").bootstrapSwitch();
-
-
-
-// directive to load a file model
-panelApp.directive('fileModel', ['$parse', function ($parse) {
-    return {
-        restrict: 'A',
-        link: function(scope, element, attrs) {
-            var model = $parse(attrs.fileModel);
-            var modelSetter = model.assign;
-
-            element.bind('change', function(){
-                scope.$apply(function(){
-                    modelSetter(scope, element[0].files[0]);
-                });
-            });
-        }
-    };
-}]);
-
 
 
 panelApp.controller("PanelCtrl", function ($scope, $document) {
@@ -288,8 +267,10 @@ panelApp.controller("PanelCtrl", function ($scope, $document) {
 
     function setUrlRank(rank) {
         var rank_data = {
-            domain: $scope.datawake.domain.name,
-            trailname: $scope.datawake.trail.name,
+            team_id: $scope.datawake.team.id,
+            domain_id: $scope.datawake.domain.id,
+            trail_id: $scope.datawake.trail.id,
+            url: $scope.current_url,
             rank: rank
         };
         addon.port.emit("setUrlRank", rank_data);

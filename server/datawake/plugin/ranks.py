@@ -21,6 +21,9 @@ import tangelo
 
 import datawake.util.db.datawake_mysql as db
 from datawake.util.session.helper import is_in_session
+from datawake.util.session.helper import has_team
+from datawake.util.session.helper import has_domain
+from datawake.util.session.helper import has_trail
 from datawake.util.session import helper
 from datawake.util.validate.parameters import required_parameters
 
@@ -37,14 +40,14 @@ from datawake.util.validate.parameters import required_parameters
 # specific to a user and trail
 #
 @is_in_session
-@required_parameters(['trailname', 'url', 'domain'])
-def get_rank(trailname, url, domain):
+@has_team
+@has_trail
+@required_parameters([ 'url'])
+def get_rank(team_id,domain_id,trail_id, url):
     user = helper.get_user()
-    org = user.get_org()
-    user_id = user.get_user_id()
     url = url.encode('utf-8')
     url = urllib.unquote(url)
-    rank = db.getUrlRank(org, user_id, trailname, url, domain=domain)
+    rank = db.getUrlRank(trail_id,user.get_email(),url)
     response = dict(rank=rank)
     return json.dumps(response)
 
@@ -53,12 +56,13 @@ def get_rank(trailname, url, domain):
 # Set the ranking for a url
 # specifc to a user and trail
 @is_in_session
-@required_parameters(['trailname', 'url', 'domain', 'rank'])
-def set_rank(trailname, url, rank, domain):
+@has_team
+@has_trail
+@required_parameters(['url','rank'])
+@tangelo.types(rank=int)
+def set_rank(team_id,domain_id,trail_id,url,rank):
     user = helper.get_user()
-    org = user.get_org()
-    user_id = user.get_user_id()
-    db.rankUrl(org, user_id, trailname, url, rank, domain=domain)
+    db.rankUrl(team_id,domain_id,trail_id,user.get_email(),url,rank)
     return json.dumps(dict(success=True))
 
 

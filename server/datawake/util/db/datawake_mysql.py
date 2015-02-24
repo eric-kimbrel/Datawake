@@ -294,6 +294,12 @@ def listTrails(team_id, domain_id):
     return map(lambda x: dict(id=x[0], name= x[1], description= x[2]), rows)
 
 
+def hasTrail(team_id,domain_id,trail_id):
+    """Check if a team and domain has a trail"""
+    sql = "select id from datawake_trails where id = %s AND team_id = %s AND domain_id = %s"
+    rows = dbGetRows(sql,[trail_id,team_id,domain_id])
+    return len(rows) > 0
+
 #
 # Return a list of trail names found in the datawake_data table
 #
@@ -343,16 +349,15 @@ def getTrailsWithUserCounts(org):
 #
 # Rank a url
 #
-def rankUrl(org, userId, trailname, url, rank, domain='default'):
-    org = org.upper()
-    sql = """SELECT id
-            FROM datawake_url_rank
-            WHERE org = %s AND
-            domain = %s AND
-            userId = %s AND
-            trailname = %s AND
-            url = %s"""
-    params = [org, domain, userId, trailname, url]
+def rankUrl(team_id,domain_id,trail_id,userEmail,url,rank):
+
+    # check to see if this url is alerady ranked for this trail and user.
+    # we can't just use an INSERT or UPDATE because we can't use url as part of
+    # the primary key due to its potential long length.
+
+    sql = """SELECT id FROM datawake_url_rank
+            WHERE trail_id = %s AND userEmail= %s AND url = %s"""
+    params = [trail_id, userEmail, url]
     rows = dbGetRows(sql, params)
 
     # update existing row
@@ -366,24 +371,28 @@ def rankUrl(org, userId, trailname, url, rank, domain='default'):
 
     # insert a new row
     else:
-        sql = """ INSERT INTO datawake_url_rank (userId,trailname,url,rank,org,domain)
+        sql = """ INSERT INTO datawake_url_rank (team_id,domain_id,trail_id,userEmail,url,rank)
                   VALUES (%s,%s,%s,%s,%s,%s)
               """
-        params = [userId, trailname, url, rank, org, domain]
+        params = [team_id,domain_id,trail_id,userEmail,url,rank]
         dbCommitSQL(sql, params)
 
 
-#
-# Get url rank for a user and trail
-# Always returns a rank, defaults to 0
-#
-def getUrlRank(org, userId, trailname, url, domain='default'):
-    org = org.upper()
+
+def getUrlRank(trail_id,userEmail,url):
+    """
+    Get url rank for a user on a trail.
+    If not ranked return 0
+    :param trail_id:
+    :param userEmail:
+    :param url:
+    :return:
+    """
     sql = """ SELECT rank
               FROM datawake_url_rank
-              WHERE org = %s AND domain = %s AND userId = %s AND trailname = %s AND url = %s
+              WHERE trail_id = %s and userEmail = %s AND url = %s
           """
-    params = [org, domain, userId, trailname, url]
+    params = [trail_id,userEmail,url]
     rows = dbGetRows(sql, params)
     if len(rows) == 0:
         return 0
@@ -441,6 +450,17 @@ def get_domains(team_id):
     rows = dbGetRows(sql, [team_id])
     return map(lambda x: dict(id=x[0],name=x[1],description=x[2]),rows)
 
+
+def hasDomains(team_id,domain_id):
+    """
+    Verify a team as a specifyc domain
+    :param team_id:
+    :param domain_id:
+    :return:
+    """
+    sql = "SELECT id from datawake_domains where id = %s AND team_id = %s"
+    rows = dbGetRows(sql, [domain_id,team_id])
+    return len(rows) > 0
 
 def add_new_domain(team_id,name, description):
     sql = "INSERT INTO datawake_domains (name,description,team_id) values (%s,%s,%s)"

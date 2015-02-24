@@ -257,13 +257,23 @@ function launchDatawakePanel(){
             });
         }
 
+        // get the url rank
+        if (datawakeInfo.team && datawakeInfo.domain && datawakeInfo.trail ){
+
+            // TODO, likely a bug here that the ranks are only show if the datawake is set up when the panel is opened
+            // the should also be show if the the datawake is setup after the panel is opened.
+            emitRanks(datawakeInfo);
+
+            if ( datawakeInfo.isDatawakeOn) {
+                getFeaturesForPanel(datawakeInfo);
+            }
+        }
 
 
         //Get the rank info and listen for someone ranking the page.
         //emitFeedbackEntities(datawakeInfo.domain.name);
-        //emitRanks(datawakeInfo);
         //emitMarkedEntities(datawakeInfo.domain.name);
-        getFeaturesForPanel(datawakeInfo);
+
         service.getExternalLinks(function (externalLinks) {
             mainPanel.port.emit("externalLinks", externalLinks);
         });
@@ -405,15 +415,16 @@ function openExternalTool(externalUrlObject) {
 function emitRanks(datawakeInfo) {
     var url = addOnPrefs.datawakeDeploymentUrl + "/ranks/get";
     var post_data = JSON.stringify({
-        domain: datawakeInfo.domain.name,
-        trailname: datawakeInfo.trail.name,
+        team_id: datawakeInfo.team.id,
+        domain_id: datawakeInfo.domain.id,
+        trail_id: datawakeInfo.trail.id,
         url: tabs.activeTab.url
     });
     requestHelper.post(url, post_data, function (response) {
         var rank = response.json.rank;
         var rankingInfo = {};
         rankingInfo.ranking = rank;
-        mainPanel.port.emit("ranking", rankingInfo);
+        if (mainPanel) mainPanel.port.emit("ranking", rankingInfo);
     });
 }
 

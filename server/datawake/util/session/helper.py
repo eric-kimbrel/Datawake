@@ -52,24 +52,44 @@ def has_domain(callback):
         if 'team_id' not in kwargs or 'domain_id' not in kwargs:
             tangelo.http_status(500)
             tangelo.log("team_id and domain_id required.")
-            return "team id required for this call."
+            return "team id and domain id required for this call."
 
         team_id = int(kwargs['team_id'])
         domain_id = int(kwargs['domain_id'])
-        # verify the team can access the domain
-        domains = datawake_mysql.get_domains(team_id)
-        valid = False
-        for domain in domains:
-            if domain['id'] == domain_id:
-                valid = True
-                break
-        if not valid:
+        if not datawake_mysql.hasDomains(team_id,domain_id):
             tangelo.http_status(401)
             tangelo.log("401 Unauthorized. Team has no access to requested domain")
             return "401 Unauthorized"
         return callback(**kwargs)
     return verifyDomainId
 
+
+
+def has_trail(callback):
+    """
+    Decorator for tangelo web servcies
+    Requires a team_id and trail_id, checks that the team can access to the trail
+    :param callback:
+    :return:
+    """
+    def verifyTrailId(**kwargs):
+
+        if 'team_id' not in kwargs or 'trail_id' not in kwargs or 'domain_id' not in kwargs:
+            tangelo.http_status(500)
+            tangelo.log("team_id, domain id, and trail_id required.")
+            tangelo.log(kwargs)
+            return "team id, domain id, and trail id required for this call."
+
+        team_id = int(kwargs['team_id'])
+        domain_id = int(kwargs['domain_id'])
+        trail_id = int(kwargs['trail_id'])
+
+        if not datawake_mysql.hasTrail(team_id,domain_id,trail_id):
+            tangelo.http_status(401)
+            tangelo.log("401 Unauthorized. Team has no access to requested domain")
+            return "401 Unauthorized"
+        return callback(**kwargs)
+    return verifyTrailId
 
 
 def get_user():

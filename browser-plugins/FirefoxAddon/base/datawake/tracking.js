@@ -124,8 +124,11 @@ function trackTab(tab){
                     console.error(response);
                     return;
                 }
+
                 notify("Success: Page recorded.")
                 controller.getFeaturesForPanel(datawakeInfoForTab);  // re-fetch features for the panel
+
+
 
                 //Sets up the context menu objects for this tab.
                 if (currentTrackingTabWorker.tab != null) {
