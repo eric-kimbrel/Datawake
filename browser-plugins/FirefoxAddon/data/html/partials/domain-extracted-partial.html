@@ -6,30 +6,27 @@
             <th>
                 <span>{{type}}</span>
             </th>
-            <th colspan="{{(extracted_tools.length > 0) ? extracted_tools.length : 1}}">
-                External Tools
-            </th>
             <th>
-                Remove
+                External Tools
             </th>
         </tr>
         </thead>
         <tbody>
         <tr ng-repeat="entity in entities"  ng-hide="invalid[entity]">
-            <td>
+            <td >
                 <span>
                     {{entity}}
                 </span>
             </td>
-            <td ng-show="extracted_tools.length > 0" ng-repeat="tools in extracted_tools">
-                <a ng-click="openExternalLink(tools.link.replace('$ATTR',type).replace('$VALUE',entity));">{{tools.display}}</a>
+            <td ng-show="extracted_tools.length > 0" >
+                <table>
+                    <tr ng-repeat="tools in extracted_tools">
+                        <td><a ng-click="openExternalLink(tools.link.replace('$ATTR',type).replace('$VALUE',entity));">{{tools.display}}</a></td>
+                    </tr>
+                </table>
             </td>
             <td ng-show="extracted_tools.length == 0">
                 <span>No External Tools Available</span>
-            </td>
-            <td ng-hide="invalid[entity]">
-                <button ng-hide="invalid[entity]" class="btn btn-danger" ng-click="markInvalid(type, entity);">-</button>
-                <span ng-hide="!invalid[entity]">Marked</span>
             </td>
         </tr>
         </tbody>

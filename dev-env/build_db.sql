@@ -132,25 +132,29 @@ CREATE TABLE domain_extractor_web_index (
 );
 
 
-CREATE TABLE scraping_feedback (
-  entity_type varchar(100),
-  entity_value varchar(1024),
-  raw_text varchar (100),
-  url TEXT,
-  domain varchar (300),
-  org VARCHAR(300),
-  index(org(300),domain(300))
-);
-
-
-CREATE TABLE invalid_extracted_entity (
-  entity_value varchar (1024),
-  entity_type varchar (100),
-  domain varchar (300),
-  org VARCHAR(300),
-  userName TEXT,
+CREATE TABLE manual_extractor_markup_additions (
+  trail_id INT,
   ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  index(org(300),domain(300), entity_type(100), entity_value(100))
+  userEmail VARCHAR(245),
+  url TEXT,
+  raw_text varchar (1024),
+  feature_type varchar(100),
+  feature_value varchar(1024),
+  FOREIGN KEY (trail_id) REFERENCES datawake_trails(id) ON DELETE CASCADE,
+  INDEX(trail_id,url(60))
 );
+
+
+CREATE TABLE manual_extractor_markup_removals (
+  trail_id INT,
+  ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  userEmail VARCHAR(245),
+  feature_type varchar(100),
+  feature_value varchar(1024),
+  FOREIGN KEY (trail_id) REFERENCES datawake_trails(id) ON DELETE CASCADE,
+  INDEX(trail_id)
+);
+
+
 
 \q

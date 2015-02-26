@@ -470,45 +470,61 @@ def remove_domain(domain_id):
 
 
 
+# Feature extraction additions and removals
+
+"""
+CREATE TABLE manual_extractor_markup_additions (
+  trail_id INT,
+  ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  userEmail VARCHAR(245),
+  url TEXT,
+  raw_text varchar (1024),
+  feature_type varchar(100),
+  feature_value varchar(1024)
+);
 
 
-def add_extractor_feedback(org, domain, raw_text, entity_type, entity_value, url):
-    sql = "insert into scraping_feedback(org, domain, raw_text, entity_type, entity_value, url) value (%s,%s,%s,%s,%s,%s)"
-    return dbCommitSQL(sql, [org, domain, raw_text, entity_type, entity_value, url])
+CREATE TABLE manual_extractor_markup_removals (
+  trail_id INT,
+  ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  userEmail VARCHAR(245),
+  feature_type varchar(100),
+  feature_value varchar(1024)
+);
+"""
 
 
-def get_feedback_entities(org, domain, url):
-    sql = "select entity_type, entity_value from scraping_feedback where url=%s and domain=%s and org=%s"
-    params = [url, domain, org]
+def add_manual_feature(trail_id, userEmail,url,raw_text, feature_type, feature_value):
+    sql = """
+          INSERT INTO manual_extractor_markup_additions
+          (trail_id,userEmail,url,raw_text,feature_type,feature_value)
+          VALUES (%s,%s,%s,%s,%s,%s)
+          """
+    return dbCommitSQL(sql, [trail_id,userEmail,url,raw_text,feature_type,feature_value])
+
+
+def get_manual_features(trail_id,url):
+    sql = "select feature_type,feature_value from manual_extractor_markup_additions where trail_id = %s AND url=%s"
+    params = [trail_id, url]
     rows = dbGetRows(sql, params)
     return map(lambda x: dict(type=x[0], value=x[1]), rows)
 
 
-def get_invalid_extracted_entity_count(user_name, entity_type, entity_value, domain, org):
-    sql = "select count(*) from invalid_extracted_entity where userName=%s and entity_type=%s and entity_value=%s and domain=%s and org=%s"
-    params = [user_name, entity_type, entity_value, domain, org]
-    return dbGetRows(sql, params)[0][0]
+
+def mark_invalid_feature(trail_id,userEmail, feature_type, feature_value):
+    sql = "insert into manual_extractor_markup_removals (trail_id,userEmail,feature_type,feature_value) VALUES (%s,%s,%s,%s)"
+    params = [trail_id,userEmail,feature_type,feature_value]
+    return dbCommitSQL(sql, params)
 
 
-def mark_invalid_extracted_entity(user_name, entity_type, entity_value, domain, org):
-    count = get_invalid_extracted_entity_count(user_name, entity_type, entity_value, domain, org)
-    if count == 0:
-        params = [user_name, entity_type, entity_value, domain, org]
-        sql = "insert into invalid_extracted_entity(userName, entity_type, entity_value, domain, org) value (%s,%s,%s,%s,%s)"
-        return dbCommitSQL(sql, params)
-    else:
-        return -1
 
-def get_marked_entities(org, domain, user_name):
-    sql = "select entity_value from invalid_extracted_entity where org=%s and domain=%s and userName=%s"
-    params = [org, domain, user_name]
+def get_marked_features(trail_id):
+    sql = "select feature_type,feature_value from manual_extractor_markup_removals where trail_id=%s"
+    params = [trail_id]
     rows = dbGetRows(sql, params)
-    return map(lambda x: dict(value=x[0]), rows)
+    return map(lambda x: dict(type=x[0],value=x[1]), rows)
 
 
 
-def get_marked_entities_for_domain(org, domain):
-    sql = "select entity_type,entity_value from invalid_extracted_entity where org=%s and domain=%s"
-    params = [org, domain]
-    rows = dbGetRows(sql, params)
-    return rows
+
+

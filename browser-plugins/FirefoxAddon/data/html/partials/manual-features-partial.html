@@ -1,25 +1,25 @@
 <div class="tab-pane" id="feedback">
-    <h3>Extractor Feedback</h3>
+    <h3>Manual Features</h3>
 
     <div>
         <table class="table table-bordered">
             <thead>
             <tr>
                 <th>
-                    Entity Type
+                    Type
                 </th>
                 <th>
-                    Extracted Value
+                    Value
                 </th>
             </tr>
             </thead>
             <tbody>
-            <tr ng-repeat="entity in feedbackEntities">
+            <tr ng-repeat="feature in manualFeatures">
                 <td>
-                    {{entity.type}}
+                    {{feature.type}}
                 </td>
                 <td>
-                    {{entity.value}}
+                    {{feature.value}}
                 </td>
             </tr>
             </tbody>

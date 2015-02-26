@@ -1,57 +1,61 @@
 import json
-
 import tangelo
-
 import datawake.util.db.datawake_mysql as db
 import datawake.util.session.helper as session_helper
 from datawake.util.validate.parameters import required_parameters
 
 
+
 @session_helper.is_in_session
-@required_parameters(['entity_type', 'entity_value', 'domain'])
-def invalid_extraction(entity_type, entity_value, domain):
+@session_helper.has_team
+@session_helper.has_trail
+@required_parameters([ 'feature_type', 'feature_value'])
+@tangelo.types(team_id=int,domain_id=int,trail_id=int)
+def invalid_extraction(team_id,domain_id,trail_id,feature_type, feature_value):
     user = session_helper.get_user()
-    user_name = user.get_user_name()
-    org = session_helper.get_org()
-    success = db.mark_invalid_extracted_entity(user_name, entity_type, entity_value, domain, org) == 0
-    return json.dumps(dict(success=success))
+    db.mark_invalid_feature(trail_id,user.get_email(), feature_type, feature_value)
+    return json.dumps(dict(success=True))
 
-
-@session_helper.is_in_session
-@required_parameters(['raw_text', 'entity_type', 'entity_value', 'url', 'domain'])
-def good_extraction(raw_text, entity_type, entity_value, url, domain):
-    org = session_helper.get_org()
-    success = db.add_extractor_feedback(org, domain, raw_text, entity_type, entity_value, url) == 0
-    if success:
-        tangelo.log("ADDED MANUAL ENTITY "+entity_type+":"+entity_value)
-    else:
-        tangelo.log("FAILED TO MANUAL ADD "+entity_type+":"+entity_value)
-    return json.dumps(dict(success=success))
 
 
 @session_helper.is_in_session
-@required_parameters(['url', 'domain'])
-def fetch_entities(domain, url):
-    org = session_helper.get_org()
-    entities = db.get_feedback_entities(org, domain, url)
-    return json.dumps(dict(entities=entities))
-
-
-@session_helper.is_in_session
-@required_parameters(['domain'])
-def marked_entities(domain):
+@session_helper.has_team
+@session_helper.has_trail
+@required_parameters(['raw_text', 'feature_type', 'feature_value', 'url'])
+@tangelo.types(team_id=int,domain_id=int,trail_id=int)
+def add_manual_feature(team_id,domain_id,trail_id,url,raw_text,feature_type,feature_value):
     user = session_helper.get_user()
-    user_name = user.get_user_name()
-    org = session_helper.get_org()
-    marked_entities_list = db.get_marked_entities(org, domain, user_name)
-    return json.dumps(dict(marked_entities=marked_entities_list))
+    db.add_manual_feature(trail_id, user.get_email(),url,raw_text, feature_type, feature_value)
+    return json.dumps(dict(success=True))
+
+
+
+@session_helper.is_in_session
+@session_helper.has_team
+@session_helper.has_trail
+@required_parameters(['url'])
+@tangelo.types(team_id=int,domain_id=int,trail_id=int)
+def get_manual_features(team_id,domain_id,trail_id, url):
+    features = db.get_manual_features(trail_id,url)
+    return json.dumps(features)
+
+
+
+@session_helper.is_in_session
+@session_helper.has_team
+@session_helper.has_trail
+@tangelo.types(team_id=int,domain_id=int,trail_id=int)
+def get_marked_features(team_id,domain_id,trail_id):
+    user = session_helper.get_user()
+    marked_features_list = db.get_marked_features(trail_id)
+    return json.dumps(marked_features_list)
 
 
 post_actions = {
-    "marked": marked_entities,
-    "bad": invalid_extraction,
-    "good": good_extraction,
-    "entities": fetch_entities
+    "get_invalid_features": get_marked_features,
+    "invalid_feature": invalid_extraction,
+    "add_manual_feature": add_manual_feature,
+    "manual_features": get_manual_features
 }
 
 

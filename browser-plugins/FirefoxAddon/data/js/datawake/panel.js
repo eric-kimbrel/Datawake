@@ -170,9 +170,11 @@ panelApp.controller("PanelCtrl", function ($scope, $document) {
 
 
 
-    addon.port.on("feedbackEntities", function (entities) {
+    addon.port.on("manualFeatures", function (features) {
+       console.log("Got manual features")
+       console.log(features)
         $scope.$apply(function () {
-            $scope.feedbackEntities = entities;
+            $scope.manualFeatures = features;
         });
     });
 
@@ -215,16 +217,23 @@ panelApp.controller("PanelCtrl", function ($scope, $document) {
 
     $scope.markInvalid = function (type, entity) {
         var postObj = {};
-        postObj.entity_type = type;
-        postObj.entity_value = entity;
-        postObj.domain = $scope.datawake.domain.name;
+        postObj.team_id = $scope.datawake.team.id;
+        postObj.domain_id = $scope.datawake.domain.id;
+        postObj.trail_id = $scope.datawake.trail.id;
+        postObj.feature_type = type;
+        postObj.feature_value = entity;
         addon.port.emit("markInvalid", postObj);
+        $scope.invalid[entity] = true;
     };
 
-    addon.port.on("marked", function (entity) {
-        $scope.$apply(function () {
-            $scope.invalid[entity] = true;
-        });
+    addon.port.on("markedFeatures", function (features) {
+        for (i in features){
+            var feature = features[i];
+            $scope.invalid[feature.value] = true;
+        }
+        $scope.$apply()
+
+
     });
 
     $scope.isExtracted = function (type, name) {
@@ -232,6 +241,15 @@ panelApp.controller("PanelCtrl", function ($scope, $document) {
             return $scope.entities_in_domain[type].indexOf(name) >= 0;
         }
     };
+
+    $scope.editFeatures = function(){
+        if (!$scope.allowEditFeatures){
+            $scope.allowEditFeatures = true;
+        }
+        else{
+            $scope.allowEditFeatures = false;
+        }
+    }
 
 
 
@@ -297,8 +315,8 @@ panelApp.config(['$routeProvider',
             when('/features/domain', {
                 templateUrl: 'partials/domain-extracted-partial.html'
             }).
-            when('/feedback', {
-                templateUrl: 'partials/feedback-partial.html'
+            when('/features/manual', {
+                templateUrl: 'partials/manual-features-partial.html'
             }).
             otherwise({
                 redirectTo: '/features/domain'

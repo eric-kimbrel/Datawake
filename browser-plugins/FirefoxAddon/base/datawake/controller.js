@@ -270,9 +270,7 @@ function launchDatawakePanel(){
         }
 
 
-        //Get the rank info and listen for someone ranking the page.
-        //emitFeedbackEntities(datawakeInfo.domain.name);
-        //emitMarkedEntities(datawakeInfo.domain.name);
+
 
         service.getExternalLinks(function (externalLinks) {
             mainPanel.port.emit("externalLinks", externalLinks);
@@ -302,6 +300,12 @@ function getFeaturesForPanel(datawakeinfo){
                if (response.status != 200) notifyError("Error getting domain features for this url.")
                else mainPanel.port.emit("domain_features", response.json);
            });
+
+           // get manually labeled features
+           loadManualFeatures(datawakeinfo);
+
+           // get list of features marked as invalid
+           emitMarkedEntities(datawakeinfo);
 
        }
    }
@@ -370,20 +374,28 @@ function changeDomain(tabId,newdomain,callback){
  * Marks an entity as invalid
  * @param entity Object(entity_value, entity_type, domain)
  */
-function markInvalid(entity) {
-    var post_url = addOnPrefs.datawakeDeploymentUrl + "/feedback/bad";
-    requestHelper.post(post_url, JSON.stringify(entity), function (response) {
-        mainPanel.port.emit("marked", entity.entity_value);
+function markInvalid(data) {
+    var post_url = addOnPrefs.datawakeDeploymentUrl + "/feedback/invalid_feature";
+    requestHelper.post(post_url, JSON.stringify(data), function (response) {
+        mainPanel.port.emit("marked", data.feature_value);
     });
 }
 
-function emitMarkedEntities(domain) {
-    var post_url = addOnPrefs.datawakeDeploymentUrl + "/feedback/marked";
-    requestHelper.post(post_url, JSON.stringify({domain: domain}), function (response) {
-        var marked_entities = response.json.marked_entities;
-        for (var index in marked_entities)
-            if (marked_entities.hasOwnProperty(index))
-                mainPanel.port.emit("marked", marked_entities[index].value);
+function emitMarkedEntities(datawakeinfo) {
+    var post_url = addOnPrefs.datawakeDeploymentUrl + "/feedback/get_invalid_features";
+    var post_obj = {
+        team_id: datawakeinfo.team.id,
+        domain_id : datawakeinfo.domain.id,
+        trail_id: datawakeinfo.trail.id
+    }
+    requestHelper.post(post_url, JSON.stringify(post_obj), function (response) {
+        if (response.status != 200){
+            notifyError("Error retrieving invalid features for this trail.")
+        }
+        else{
+            mainPanel.port.emit("markedFeatures", response.json);
+        }
+
     });
 }
 
@@ -391,15 +403,22 @@ function emitMarkedEntities(domain) {
  * Emits feedback entities
  * @param domain domainName
  */
-function emitFeedbackEntities(domain) {
-    var post_url = addOnPrefs.datawakeDeploymentUrl + "/feedback/entities";
+function loadManualFeatures(info) {
+    var post_url = addOnPrefs.datawakeDeploymentUrl + "/feedback/manual_features";
     var post_data = JSON.stringify({
-        domain: domain,
+        team_id: info.team.id,
+        domain_id: info.domain.id,
+        trail_id: info.trail.id,
         url: tabs.activeTab.url
     });
     requestHelper.post(post_url, post_data, function (response) {
-        var entities = response.json.entities;
-        mainPanel.port.emit("feedbackEntities", entities);
+        if (response.status != 200){
+            notifyError("Error getting manual features for this url.")
+        }
+        else{
+            mainPanel.port.emit("manualFeatures", response.json);
+        }
+
     });
 }
 

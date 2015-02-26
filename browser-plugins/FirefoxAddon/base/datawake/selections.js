@@ -28,7 +28,7 @@ function useContextMenu(tab) {
             context: contextMenu.URLContext(url),
             items: [
                 contextMenu.Item({ label: "Capture Selection", data: "selection", context: contextMenu.SelectionContext()}),
-                contextMenu.Item({ label: "Report Extraction Error", data: "feedback", context: contextMenu.SelectionContext()}),
+                contextMenu.Item({ label: "Tag a feature", data: "feedback", context: contextMenu.SelectionContext()}),
                 contextMenu.Separator(),
                 contextMenu.Item({ label: "Hide Selections", data: "hide"}),
                 contextMenu.Item({ label: "Show Selections", data: "highlight"}),
@@ -45,7 +45,7 @@ function useContextMenu(tab) {
                         saveWindowSelection(datawakeInfo, tabs.activeTab.url, message.text);
                         break;
                     case "feedback":
-                        saveFeedback(message.text, tabs.activeTab.url, datawakeInfo.domain.name);
+                        saveFeedback(message.text, tabs.activeTab.url, datawakeInfo);
                         break;
                     case "hide":
                         hideSelections("selections");
@@ -66,20 +66,22 @@ function hideSelections(className) {
  * @param url the url it occurred on
  * @param domain domain it was apart of.
  */
-function saveFeedback(raw_text, url, domain) {
+function saveFeedback(raw_text, url, datawakeinfo) {
 
     tracking.promptForExtractedFeedback(raw_text, function (type, extractedValue) {
         var post_obj = {};
         post_obj.raw_text = raw_text;
-        post_obj.entity_value = extractedValue;
-        post_obj.entity_type = type;
+        post_obj.feature_value = extractedValue;
+        post_obj.feature_type = type;
         post_obj.url = url;
-        post_obj.domain = domain;
+        post_obj.team_id = datawakeinfo.team.id;
+        post_obj.domain_id = datawakeinfo.domain.id;
+        post_obj.trail_id = datawakeinfo.trail.id;
         function logSuccess(response) {
             console.log(raw_text + " was successfully saved as feedback.");
         }
 
-        requestHelper.post(addOnPrefs.datawakeDeploymentUrl + "/feedback/good", JSON.stringify(post_obj), logSuccess);
+        requestHelper.post(addOnPrefs.datawakeDeploymentUrl + "/feedback/add_manual_feature", JSON.stringify(post_obj), logSuccess);
     });
 
 }
